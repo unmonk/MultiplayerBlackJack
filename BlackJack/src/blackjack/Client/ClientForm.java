@@ -4,7 +4,7 @@
  *  by waiving all of his or her rights to the work worldwide under copyright law,
  *  including all related and neighboring rights, to the extent allowed by law.
  */
-package blackjack;
+package blackjack.Client;
 
 /**
  *
