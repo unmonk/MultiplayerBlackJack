@@ -8,6 +8,7 @@ package blackjack.Client;
 
 import java.util.ArrayList;
 import java.io.*;
+import javax.swing.ImageIcon;
 /**
  *
  * @author Scott
@@ -21,6 +22,7 @@ public class ClientForm extends javax.swing.JFrame {
 {
     private int cash = 250;
     private int cardsValue = 0;
+    private int cardCount = 0;
     private ArrayList<Card> playerCards;
     private InputStream inStream;
     private OutputStream outStream;
@@ -37,59 +39,154 @@ public class ClientForm extends javax.swing.JFrame {
      this.outStream = outStream;
      dataInStream = new DataInputStream(inStream);
      dataOutStream = new DataOutputStream(outStream);
-     
-     CurrentCashCHANGE.setText(Integer.toString(cash));
-     CardsTotal.setText(Integer.toString(cardsValue));
+     setCashLabel(cash);
+     setCardTotal(cardsValue);
     }
     
     //Places a bet if the betButton has been pressed
     public void placeBet()
     {
         ChatBoxArea.append("Place a bet!");
-        if (isBetPressed == false)
+        if (isBetPressed)
         {
             ChatBoxArea.append("Please press Submit Bid");
+            placeBet();
         }
         else
         {
             betAmount = GUIBetAmount;
             int newMoney = cash - betAmount;
-            CurrentCashCHANGE.setText(Integer.toString(newMoney));
-            BidLabel.setText("000");
+            setCashLabel(newMoney);
+            clearBidLabel();
             isBetPressed = false;
         }
         
     }
     
-    public void getCards()
+    public void getCard()
     {
        try
        {
+           //get a card, and add to playerCards
            objectStream = new ObjectInputStream(inStream);
            Card card = (Card) objectStream.readObject();
            cardsValue = cardsValue + card.getValue();
            ChatBoxArea.append("Recieved: " + card.getCardName());
-           CardsTotal.setText(Integer.toString(cardsValue));
+           setCardTotal(cardsValue);
            playerCards.add(card);
+           cardCount++;
            
-         
+           //Set Correct Image
+           String whichImage = "Images/" + card.getCardName() + ".png";
+           ImageIcon cardImage = new ImageIcon(whichImage);
+           switch(cardCount)
+           {
+               case 1:
+                   playerCard1.setIcon(cardImage);
+                   break;
+               case 2:
+                   playerCard2.setIcon(cardImage);
+                   break;
+               case 3:
+                   playerCard3.setIcon(cardImage);
+                   break;
+               case 4:
+                   playerCard4.setIcon(cardImage);
+                   break;
+               case 5:
+                   playerCard5.setIcon(cardImage);
+                   break;
+               case 6:
+                   playerCard6.setIcon(cardImage);
+                   break;
+               
+           }
+           
        } 
        catch(IOException ex)
        {
+           ex.printStackTrace();
            ChatBoxArea.append(ex.toString());
        }
        catch(ClassNotFoundException ex)
        {
-           ChatBoxArea.append(ex.toString())
-;       }
+           ex.printStackTrace();
+           ChatBoxArea.append(ex.toString());
+       }
     }
     
+    public void Hit()
+    {
+        getCard();
+    }
     
+    public void Stand()
+    {
+        endGame();
+    }
     
+    public void endGame()
+    {
+        endGame = true;
+        try
+        {
+            String result = dataInStream.readUTF();
+            int numOfPlayers = inStream.read();
+            ChatBoxArea.append(result);
+            if(result.equals("WINNER"))
+            {
+                cash = cash + betAmount * numOfPlayers;
+                setCashLabel(cash);
+            }
+            ChatBoxArea.append("New Balance: $" + getCash() );
+        }
+        catch(IOException ex)
+        {
+            ex.printStackTrace();
+            ChatBoxArea.append(ex.toString());
+        }
+        
+        cardsValue = 0;
+        setCardTotal(cardsValue);
+        playerCards = new ArrayList<>();
+        betAmount = 0;
+        clearBidLabel();
+    }
     
+    public void setCashLabel(int cash)
+    {
+        CurrentCashCHANGE.setText(Integer.toString(cash));
+    }
+    public int getCash()
+    {
+     return Integer.parseInt(CurrentCashCHANGE.getText());
+    }
+    public void setCardTotal(int cardsValue)
+    {
+        CardsTotal.setText(Integer.toString(cardsValue));
+    }
+    public void clearBidLabel()
+    {
+        BidAmountBox.setText("000");
+    }
+    public void getMessage()
+    {
+        String message = "";
+        try
+        {
+            message = dataInStream.readUTF();
+        }
+        catch(IOException ex)
+        {
+            ex.printStackTrace();
+            ChatBoxArea.append(ex.toString());
+        }
+    }
     
-    
-    
+    public void newGame()
+    {
+        endGame = false;
+    }
     
 }
 
