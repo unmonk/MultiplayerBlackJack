@@ -172,6 +172,10 @@
                                           <Component id="CurrentCashCHANGE" min="-2" pref="27" max="-2" attributes="0"/>
                                       </Group>
                                   </Group>
+                                  <EmptySpace min="-2" pref="78" max="-2" attributes="0"/>
+                                  <Component id="cardsTotalLbael" min="-2" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="CardsTotal" min="-2" max="-2" attributes="0"/>
                               </Group>
                           </Group>
                       </Group>
@@ -208,6 +212,8 @@
                           <Group type="103" groupAlignment="3" attributes="0">
                               <Component id="CurrentCashLabel" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="CurrentCashCHANGE" alignment="3" min="-2" pref="9" max="-2" attributes="0"/>
+                              <Component id="cardsTotalLbael" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="CardsTotal" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
                       </Group>
                   </Group>
@@ -297,6 +303,19 @@
                 </LineBorder>
               </Border>
             </Property>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="cardsTotalLbael">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Cards Total:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="CardsTotal">
+          <Properties>
+            <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+              <Font name="Tahoma" size="12" style="1"/>
+            </Property>
+            <Property name="text" type="java.lang.String" value="15"/>
           </Properties>
         </Component>
       </SubComponents>

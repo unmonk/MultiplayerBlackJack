@@ -20,7 +20,7 @@ public class ClientForm extends javax.swing.JFrame {
     public class Player 
 {
     private int cash = 250;
-    private int cardValue;
+    private int cardsValue = 0;
     private ArrayList<Card> playerCards;
     private InputStream inStream;
     private OutputStream outStream;
@@ -37,6 +37,9 @@ public class ClientForm extends javax.swing.JFrame {
      this.outStream = outStream;
      dataInStream = new DataInputStream(inStream);
      dataOutStream = new DataOutputStream(outStream);
+     
+     CurrentCashCHANGE.setText(Integer.toString(cash));
+     CardsTotal.setText(Integer.toString(cardsValue));
     }
     
     //Places a bet if the betButton has been pressed
@@ -51,7 +54,8 @@ public class ClientForm extends javax.swing.JFrame {
         {
             betAmount = GUIBetAmount;
             int newMoney = cash - betAmount;
-            BidLabel.setText(Integer.toString(newMoney));
+            CurrentCashCHANGE.setText(Integer.toString(newMoney));
+            BidLabel.setText("000");
             isBetPressed = false;
         }
         
@@ -59,7 +63,25 @@ public class ClientForm extends javax.swing.JFrame {
     
     public void getCards()
     {
-        
+       try
+       {
+           objectStream = new ObjectInputStream(inStream);
+           Card card = (Card) objectStream.readObject();
+           cardsValue = cardsValue + card.getValue();
+           ChatBoxArea.append("Recieved: " + card.getCardName());
+           CardsTotal.setText(Integer.toString(cardsValue));
+           playerCards.add(card);
+           
+         
+       } 
+       catch(IOException ex)
+       {
+           ChatBoxArea.append(ex.toString());
+       }
+       catch(ClassNotFoundException ex)
+       {
+           ChatBoxArea.append(ex.toString())
+;       }
     }
     
     
@@ -97,6 +119,8 @@ public class ClientForm extends javax.swing.JFrame {
         CurrentCashCHANGE = new javax.swing.JLabel();
         HitButton = new javax.swing.JButton();
         StayButton = new javax.swing.JButton();
+        cardsTotalLbael = new javax.swing.JLabel();
+        CardsTotal = new javax.swing.JLabel();
         DealerCardsPanel = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         dealerCard1 = new javax.swing.JLabel();
@@ -192,6 +216,11 @@ public class ClientForm extends javax.swing.JFrame {
         StayButton.setText("STAY");
         StayButton.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(250, 0, 50), 1, true));
 
+        cardsTotalLbael.setText("Cards Total:");
+
+        CardsTotal.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        CardsTotal.setText("15");
+
         javax.swing.GroupLayout PlayerControlPanelLayout = new javax.swing.GroupLayout(PlayerControlPanel);
         PlayerControlPanel.setLayout(PlayerControlPanelLayout);
         PlayerControlPanelLayout.setHorizontalGroup(
@@ -221,7 +250,11 @@ public class ClientForm extends javax.swing.JFrame {
                                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, PlayerControlPanelLayout.createSequentialGroup()
                                         .addComponent(CurrentCashLabel)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                        .addComponent(CurrentCashCHANGE, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)))))))
+                                        .addComponent(CurrentCashCHANGE, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addGap(78, 78, 78)
+                                .addComponent(cardsTotalLbael)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(CardsTotal)))))
                 .addContainerGap())
         );
         PlayerControlPanelLayout.setVerticalGroup(
@@ -247,7 +280,9 @@ public class ClientForm extends javax.swing.JFrame {
                         .addGap(18, 18, 18)
                         .addGroup(PlayerControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(CurrentCashLabel)
-                            .addComponent(CurrentCashCHANGE, javax.swing.GroupLayout.PREFERRED_SIZE, 9, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addComponent(CurrentCashCHANGE, javax.swing.GroupLayout.PREFERRED_SIZE, 9, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cardsTotalLbael)
+                            .addComponent(CardsTotal))))
                 .addGap(8, 8, 8))
         );
 
@@ -445,6 +480,7 @@ public class ClientForm extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField BidAmountBox;
     private javax.swing.JLabel BidLabel;
+    private javax.swing.JLabel CardsTotal;
     private javax.swing.JTextArea ChatBoxArea;
     private javax.swing.JTextField ChatBoxMessageBox;
     private javax.swing.JButton ChatBoxSendButton;
@@ -459,6 +495,7 @@ public class ClientForm extends javax.swing.JFrame {
     private javax.swing.JPanel PlayerControlPanel;
     private javax.swing.JButton StayButton;
     private javax.swing.JButton SubmitBidButton;
+    private javax.swing.JLabel cardsTotalLbael;
     private javax.swing.JLabel dealerCard1;
     private javax.swing.JLabel dealerCard2;
     private javax.swing.JLabel dealerCard3;
