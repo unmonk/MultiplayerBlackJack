@@ -18,6 +18,7 @@ public class ClientForm extends javax.swing.JFrame {
     private boolean isBetPressed = false;
     private int GUIBetAmount;
     
+    //Player class for a player object
     public class Player 
 {
     private int cash = 250;
@@ -102,7 +103,7 @@ public class ClientForm extends javax.swing.JFrame {
                
            }
            
-       } 
+       } //print errors
        catch(IOException ex)
        {
            ex.printStackTrace();
@@ -114,17 +115,17 @@ public class ClientForm extends javax.swing.JFrame {
            ChatBoxArea.append(ex.toString());
        }
     }
-    
+    //Helper to get a new card / hit button
     public void Hit()
     {
         getCard();
     }
-    
+    //Helper for stand button
     public void Stand()
     {
         endGame();
     }
-    
+    //stand results from dealer, add money if you won, reset stats
     public void endGame()
     {
         endGame = true;
@@ -152,23 +153,27 @@ public class ClientForm extends javax.swing.JFrame {
         betAmount = 0;
         clearBidLabel();
     }
-    
+    //helper to change the cash label
     public void setCashLabel(int cash)
     {
         CurrentCashCHANGE.setText(Integer.toString(cash));
     }
+    //helper to get the cash amount
     public int getCash()
     {
      return Integer.parseInt(CurrentCashCHANGE.getText());
     }
+    //helper to set the card label
     public void setCardTotal(int cardsValue)
     {
         CardsTotal.setText(Integer.toString(cardsValue));
     }
+    //helper to empty the bid box
     public void clearBidLabel()
     {
         BidAmountBox.setText("000");
     }
+    //helper to get message from server
     public void getMessage()
     {
         String message = "";
@@ -182,7 +187,7 @@ public class ClientForm extends javax.swing.JFrame {
             ChatBoxArea.append(ex.toString());
         }
     }
-    
+    //new game sets endgame to false
     public void newGame()
     {
         endGame = false;
