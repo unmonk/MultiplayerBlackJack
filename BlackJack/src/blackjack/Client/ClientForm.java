@@ -65,7 +65,7 @@ public class ClientForm extends javax.swing.JFrame {
             {
                 ChatBoxArea.append("Starting Game.");
                 ChatBoxArea.append("Other players placing bets...");
-                if(!player.getMessage().equals("MAKEBET"))
+                if(!player.getMessage().equals("BET"))
                 {
                     return;
                 }
