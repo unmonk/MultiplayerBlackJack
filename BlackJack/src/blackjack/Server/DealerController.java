@@ -5,10 +5,6 @@
  *  including all related and neighboring rights, to the extent allowed by law.
  */
 package blackjack.Server;
-import static blackjack.Server.DealerForm.DealerTextArea;
-import static blackjack.Server.DealerForm.disableStartGameButton;
-import static blackjack.Server.DealerForm.gameStarted;
-import static blackjack.Server.DealerForm.startGameButton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -26,6 +22,7 @@ public class DealerController implements Runnable
     ArrayList<Integer> playerCardValues;
     volatile Iterator<PlayerController> iterator;
     String anyMessage = "";
+    public boolean startGame = false;
 
     //Fills deck with each type of card from enum CardList four times to represent a 52 card deck
     private void shuffleDeck()
@@ -42,7 +39,8 @@ public class DealerController implements Runnable
             card = new Card(thisCard);
             deck.add(2, card);
         }
-        DealerTextArea.append("Number of cards in current Deck: " + deck.size() +"\n" );
+        DealerForm.appendDealerBox("Number of cards in current Deck:" + deck.size() + "\n");
+        
     }
     
     //if less than 5 players, allows the player to join.
@@ -51,7 +49,7 @@ public class DealerController implements Runnable
         if(players.size() < 5)
         {
             players.add(player);
-            DealerTextArea.append("Player joined the game\n");
+            DealerForm.appendDealerBox("Player joined the game\n");
         }
         else
         {
@@ -73,106 +71,104 @@ public class DealerController implements Runnable
     public void removePlayer(Iterator iterator)
     {
         
-        DealerTextArea.append("Player disconnected\n");
+        DealerForm.appendDealerBox("Player disconnected\n");
         iterator.remove();
     }
     
+   
+   
     
    
-    @Override
-    public void run() 
+   @Override
+    public void run()
     {
         playerCardValues = new ArrayList<>();
         players = new ArrayList<>();
-        while(true)
+        
+        while (true) 
         {
-            DealerTextArea.append("Click start to start the game\n");
-            if(!startGameButton)
+            //DealerForm.appendDealerBox("Press Start to begin game! \n");
+            if (startGame = false)
             {
+                
+                System.out.println("I am inside IF Statement");
                 return;
             }
-            for(PlayerController p1 : players)
+            else
             {
-                p1.sendMessage("START");
-            }
-            startGameButton=false;
-            disableStartGameButton();
+                System.out.println("Test entered Else");
             
-            gameStarted = true;
-            
-            iterator = players.iterator();
-            while(iterator.hasNext())
-            {
-                PlayerController p1 = iterator.next();
-                p1.sendMessage("BET");
-                p1.setBet(iterator);
-            }
-            
-            shuffleDeck();
-            iterator = players.iterator();
-            while(iterator.hasNext())
-            {
-                PlayerController p1 = iterator.next();
-                p1.sendCard();
-                p1.sendCard();
-            }
-            
-            iterator = players.iterator();
-            while(iterator.hasNext())
-            {
-                PlayerController p1 = iterator.next();
-                p1.sendMessage("DECIDE");
-                p1.getDecision(iterator);
-            }
-            
-            for (PlayerController p1 : players)
-            {
-                if(p1.getPlayerCardValue() > 21)
+                for (PlayerController pl : players) 
                 {
-                   anyMessage = "You LOSE";
-                   DealerTextArea.append("Player: " + anyMessage);
-                   p1.sendMessage(anyMessage);
-                   p1.sendPlayerCount(players.size());
+                    pl.sendMessage("START");
+                    System.out.println("I sent start");
                 }
-                else
+
+                DealerForm.gameStarted = true;
+                iterator = players.iterator();
+
+                while (iterator.hasNext()) 
                 {
-                    playerCardValues.add(p1.getPlayerCardValue());
+                    PlayerController pl = iterator.next();
+                    pl.sendMessage("BET");
+                    pl.setBet(iterator);
                 }
-            }
-            
-            Collections.sort(playerCardValues);
-            for(PlayerController p1 : players)
-            {
-                if(p1.getPlayerCardValue() == playerCardValues.get(playerCardValues.size() - 1))
+                shuffleDeck();
+                iterator = players.iterator();
+
+                while (iterator.hasNext()) 
                 {
-                    anyMessage = "You WIN";
-                    DealerTextArea.append("Player: "+ anyMessage);
-                    p1.sendMessage(anyMessage);
-                    p1.sendPlayerCount(players.size());
+                    PlayerController pl = iterator.next();
+                    pl.sendCard();
+                    pl.sendCard();
                 }
-                else
+                iterator = players.iterator();
+
+                while (iterator.hasNext()) 
                 {
-                   anyMessage = "You LOSE";
-                   DealerTextArea.append("Player: " + anyMessage);
-                   p1.sendMessage(anyMessage);
-                   p1.sendPlayerCount(players.size());
+                    PlayerController pl = iterator.next();
+                    pl.sendMessage("DECIDE");
+                    pl.getDecision(iterator);
                 }
+
+                for (PlayerController pl : players) 
+                {
+                    if (pl.getPlayerCardValue() > 21) 
+                    {
+                        pl.sendMessage("LOSE");
+                        pl.sendPlayerCount(players.size());
+                    } 
+                    else 
+                    {
+                        playerCardValues.add(pl.getPlayerCardValue());
+                    }
+                }
+
+                Collections.sort(playerCardValues);
+                for (PlayerController pl : players) 
+                {
+                    if (pl.getPlayerCardValue() == playerCardValues.get(playerCardValues.size() - 1)) 
+                    {
+                        pl.sendMessage("WIN");
+                        pl.sendPlayerCount(players.size());
+                    }
+                    else 
+                    {
+                        pl.sendMessage("LOSE");
+                        pl.sendPlayerCount(players.size());
+                    }
+                }
+                for (PlayerController pl:players)
+                {
+                    pl.newGame();
+                }
+
+                DealerForm.gameStarted = false;
+                playerCardValues = new ArrayList<>();
             }
-            
-            for(PlayerController p1 : players)
-            {
-                p1.newGame();
-            }
-            
-            DealerForm.gameStarted = false;
-            playerCardValues = new ArrayList<>();
-            anyMessage = "";
-                
-            
+
         }
-        
     }
-    
-    
-    
 }
+    
+

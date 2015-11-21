@@ -26,6 +26,7 @@ public class ClientForm extends javax.swing.JFrame {
     
     private void Connect() throws Exception
     {
+        playAgain = true;
         ConnectionConfig con = new ConnectionConfig();
         ChatBoxArea.append("Connecting\n");
         con.connect();
@@ -58,20 +59,20 @@ public class ClientForm extends javax.swing.JFrame {
                 disableDecisionButtons();
             }
         });
-        while(playAgain)
+        while(playAgain = true)
         {
             ChatBoxArea.append("Waiting for dealer to start.\n");
             if(player.getMessage().equals("START"))
             {
-                ChatBoxArea.append("Starting Game.");
-                ChatBoxArea.append("Other players placing bets...");
+                ChatBoxArea.append("Starting Game. \n");
+                ChatBoxArea.append("Other players placing bets... \n");
                 if(!player.getMessage().equals("BET"))
                 {
                     return;
                 }
                 enableBidButton();
                 player.placeBet();
-                ChatBoxArea.append("Dealer deals to you");
+                ChatBoxArea.append("Dealer deals to you \n");
                 disableBidButton();
                 player.getCard();
                 player.getCard();
@@ -79,12 +80,12 @@ public class ClientForm extends javax.swing.JFrame {
                 {
                     return;
                 }
-                ChatBoxArea.append("Decide what to do!");
+                ChatBoxArea.append("Decide what to do! \n");
                 enableDecisionButtons();
             }
             else
             {
-                ChatBoxArea.append("Sorry, too many players or game has already started");
+                ChatBoxArea.append("Sorry, too many players or game has already started \n");
             }
             
             int response = JOptionPane.showConfirmDialog(null, "Do you want to play again?", "Round Ended", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
@@ -122,22 +123,23 @@ public class ClientForm extends javax.swing.JFrame {
     
     public Player(InputStream inStream, OutputStream outStream)
     {
-     playerCards = new ArrayList<Card>();
-     this.inStream = inStream;
-     this.outStream = outStream;
-     dataInStream = new DataInputStream(inStream);
-     dataOutStream = new DataOutputStream(outStream);
-     setCashLabel(cash);
-     setCardTotal(cardsValue);
+        this.inStream = inStream;
+        this.outStream = outStream;
+        playerCards = new ArrayList<Card>();
+        dataInStream = new DataInputStream(inStream);
+        dataOutStream = new DataOutputStream(outStream);
+        setCashLabel(cash);
+        setCardTotal(cardsValue);
     }
     
     //Places a bet if the betButton has been pressed
     public void placeBet()
     {
-        ChatBoxArea.append("Place a bet!");
-        if (isBetPressed)
+        ChatBoxArea.append("Place a bet! \n");
+        
+        if (isBetPressed = false)
         {
-            ChatBoxArea.append("Please press Submit Bid");
+            ChatBoxArea.append("Please press Submit Bid \n");
             placeBet();
         }
         else
@@ -159,7 +161,7 @@ public class ClientForm extends javax.swing.JFrame {
            objectStream = new ObjectInputStream(inStream);
            Card card = (Card) objectStream.readObject();
            cardsValue = cardsValue + card.getValue();
-           ChatBoxArea.append("Recieved: " + card.getCardName());
+           ChatBoxArea.append("Recieved: " + card.getCardName() + "\n");
            setCardTotal(cardsValue);
            playerCards.add(card);
            cardCount++;
@@ -200,13 +202,13 @@ public class ClientForm extends javax.swing.JFrame {
     //Helper to get a new card / hit button
     public void Hit()
     {
-        ChatBoxArea.append("You chose to HIT.");
+        ChatBoxArea.append("You chose to HIT. \n");
         getCard();
     }
     //Helper for stand button
     public void Stay()
     {
-        ChatBoxArea.append("You chose to STAY.");
+        ChatBoxArea.append("You chose to STAY. \n");
         endGame();
     }
     //stand results from dealer, add money if you won, reset stats
@@ -218,12 +220,13 @@ public class ClientForm extends javax.swing.JFrame {
             String result = dataInStream.readUTF();
             int numOfPlayers = inStream.read();
             ChatBoxArea.append(result);
-            if(result.equals("WINNER"))
+            if(result.equals("WIN"))
             {
+                ChatBoxArea.append("You Won! \n");
                 cash = cash + betAmount * numOfPlayers;
                 setCashLabel(cash);
             }
-            ChatBoxArea.append("New Balance: $" + getCash() );
+            ChatBoxArea.append("New Balance: $" + getCash() + "\n" );
         }
         catch(IOException ex)
         {
@@ -275,7 +278,7 @@ public class ClientForm extends javax.swing.JFrame {
     
     public void sendDecision(String decision)
     {
-        while(!endGame)
+        while(endGame = false)
         {
             try
             {
@@ -726,7 +729,7 @@ public class ClientForm extends javax.swing.JFrame {
         
         if(bidBox > maxBid || bidBox < 1)
         {
-            ChatBoxArea.append("You cant make that bet!");
+            ChatBoxArea.append("You cant make that bet! \n");
             isBetPressed=false;
         }
         else

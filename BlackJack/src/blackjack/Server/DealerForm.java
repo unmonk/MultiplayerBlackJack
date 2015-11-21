@@ -5,6 +5,8 @@
  *  including all related and neighboring rights, to the extent allowed by law.
  */
 package blackjack.Server;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -17,7 +19,7 @@ import java.net.Socket;
 public class DealerForm extends javax.swing.JFrame {
 
     
-    public static boolean gameStarted = false;
+    public static boolean gameStarted;
     public static boolean startGameButton = false;
     /**
      * Creates new form DealerForm
@@ -26,56 +28,60 @@ public class DealerForm extends javax.swing.JFrame {
     {
         setTitle("Dealer");
         initComponents();
-        initDealer();
         
     }
     
+    public static boolean getStartGame()
+    {
+        return startGameButton;
+    }
     private void initDealer()
     {
-           ServerSocket servsocket = null;
+        
+        ServerSocket servsocket = null;
         try
         {
             servsocket = new ServerSocket(7776);
-            System.out.println("Socket Worked");
+            
         }
         catch(IOException ex)
         {
-            DealerTextArea.append(ex.toString());
-            System.out.println("Socket Failed");
+            DealerForm.appendDealerBox(ex.toString());
+           
             ex.printStackTrace();
         }
         gameStarted = false;
         DealerController dealer = new DealerController();
-        System.out.println("Starting Thread");
         new Thread(dealer).start();
-        System.out.println("Thread Started, gameStarted=" + gameStarted);
+      
         while(gameStarted = false)
         {
-            System.out.println("Entered While Loop");
+            
             Socket socket = null;
             try
             {
                 socket = servsocket.accept();
-                System.out.println("Socket Worked");
+                
             }
             catch(IOException ex)
             {
-                DealerTextArea.append("Player Disconnected\n");
-                System.out.println("Socket Failed");
+                DealerForm.appendDealerBox("Player Disconnected\n");
+                
                 ex.printStackTrace();
             }
             
             PlayerController player = new PlayerController(socket, dealer);
-            System.out.println("Player Made");
+            
             dealer.addPlayer(player);
-            System.out.println("Player Added");
-            System.out.println("ThreadWorked");
+            
+            DealerForm.appendDealerBox("Player: " + player.toString() + "Connected \n");
+            
         }
                 
           
     }
     
-    public void appendDealerBox(String message)
+    public static void appendDealerBox(String message)
     {
         DealerTextArea.append(message);
     }
@@ -88,8 +94,6 @@ public class DealerForm extends javax.swing.JFrame {
     {
         StartGameButton.setVisible(true);
     }
-    
-    
     
     
 
@@ -160,7 +164,7 @@ public class DealerForm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void StartGameButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_StartGameButtonActionPerformed
-        startGameButton = true;
+        startGameButton=true;
     }//GEN-LAST:event_StartGameButtonActionPerformed
 
     /**
@@ -191,12 +195,55 @@ public class DealerForm extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
+        
+        
         java.awt.EventQueue.invokeLater(new Runnable() {
             
             public void run() {
                 new DealerForm().setVisible(true);
             }
         });
+        
+        ServerSocket servsocket = null;
+        try
+        {
+            servsocket = new ServerSocket(7776);
+            
+        }
+        catch(IOException ex)
+        {
+            DealerForm.appendDealerBox(ex.toString());
+            ex.printStackTrace();
+        }
+        gameStarted = false;
+        DealerController dealer = new DealerController();
+        new Thread(dealer).start();
+      
+        while(gameStarted = false)
+        {
+            
+            Socket socket = null;
+            try
+            {
+                socket = servsocket.accept();
+                
+            }
+            catch(IOException ex)
+            {
+                DealerForm.appendDealerBox("Player Disconnected\n");
+                
+                ex.printStackTrace();
+            }
+            
+            PlayerController player = new PlayerController(socket, dealer);
+            
+            dealer.addPlayer(player);
+            
+            DealerForm.appendDealerBox("Player: " + player.toString() + "Connected \n");
+            
+        }
+        
+        
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
