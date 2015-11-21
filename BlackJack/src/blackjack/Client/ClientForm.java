@@ -10,8 +10,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.io.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 /**
@@ -26,7 +24,7 @@ public class ClientForm extends javax.swing.JFrame {
     private String decision;
     
     
-    public void Connect() throws Exception
+    private void Connect() throws Exception
     {
         ConnectionConfig con = new ConnectionConfig();
         ChatBoxArea.append("Connecting");
@@ -132,11 +130,8 @@ public class ClientForm extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new ClientForm().setVisible(true);
-                
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            new ClientForm().setVisible(true);
         });
     }
     
@@ -236,12 +231,7 @@ public class ClientForm extends javax.swing.JFrame {
            }
            
        } //print errors
-       catch(IOException ex)
-       {
-           ex.printStackTrace();
-           ChatBoxArea.append(ex.toString());
-       }
-       catch(ClassNotFoundException ex)
+       catch(IOException | ClassNotFoundException ex)
        {
            ex.printStackTrace();
            ChatBoxArea.append(ex.toString());
@@ -288,7 +278,7 @@ public class ClientForm extends javax.swing.JFrame {
         clearBidLabel();
     }
     //helper to change the cash label
-    public void setCashLabel(int cash)
+    private void setCashLabel(int cash)
     {
         CurrentCashCHANGE.setText(Integer.toString(cash));
     }
@@ -298,7 +288,7 @@ public class ClientForm extends javax.swing.JFrame {
      return Integer.parseInt(CurrentCashCHANGE.getText());
     }
     //helper to set the card label
-    public void setCardTotal(int cardsValue)
+    private void setCardTotal(int cardsValue)
     {
         CardsTotal.setText(Integer.toString(cardsValue));
     }
@@ -371,7 +361,6 @@ public class ClientForm extends javax.swing.JFrame {
         catch (Exception ex) 
         {
             ChatBoxArea.append(ex.toString());
-            ex.printStackTrace();
         }
     }
     

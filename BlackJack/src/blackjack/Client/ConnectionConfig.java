@@ -22,7 +22,7 @@ public class ConnectionConfig
     {
         try
         {
-            socket = new Socket("localhost", 9000);
+            socket = new Socket("localhost", 7676);
         }
         catch(IOException ex)
         {

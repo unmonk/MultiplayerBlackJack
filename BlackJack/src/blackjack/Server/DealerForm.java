@@ -6,8 +6,6 @@
  */
 package blackjack.Server;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -33,7 +31,7 @@ public class DealerForm extends javax.swing.JFrame {
         ServerSocket servsocket = null;
         try
         {
-            servsocket = new ServerSocket(9000);
+            servsocket = new ServerSocket(7676);
         }
         catch(IOException ex)
         {
@@ -334,10 +332,8 @@ public class DealerForm extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new DealerForm().setVisible(true);
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            new DealerForm().setVisible(true);
         });
     }
 
