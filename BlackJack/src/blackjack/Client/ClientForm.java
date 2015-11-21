@@ -10,6 +10,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.io.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 /**
@@ -105,6 +107,7 @@ public class ClientForm extends javax.swing.JFrame {
     }
     
     public static void main(String args[]) {
+        
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
@@ -132,9 +135,6 @@ public class ClientForm extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new ClientForm().setVisible(true);
-            
-                playAgain = true;
-                
                 
             }
         });
@@ -364,6 +364,15 @@ public class ClientForm extends javax.swing.JFrame {
      */
     public ClientForm() {
         initComponents();
+        try 
+        {
+            Connect();
+        } 
+        catch (Exception ex) 
+        {
+            ChatBoxArea.append(ex.toString());
+            ex.printStackTrace();
+        }
     }
     
     private void enableBidButton()

@@ -8,7 +8,11 @@ package blackjack.Server;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Random;
 
@@ -23,9 +27,45 @@ public class DealerForm extends javax.swing.JFrame {
     /**
      * Creates new form DealerForm
      */
-    public DealerForm() {
+    public DealerForm() 
+    {
         initComponents();
+        ServerSocket servsocket = null;
+        try
+        {
+            servsocket = new ServerSocket(9000);
+        }
+        catch(IOException ex)
+        {
+            DealerTextArea.append(ex.toString());
+            ex.printStackTrace();
+        }
+        gameStarted = false;
+        DealerController dealer = new DealerController();
+        new Thread(dealer).start();
+        while(!gameStarted)
+        {
+            Socket socket = null;
+            try
+            {
+                socket = servsocket.accept();
+            }
+            catch(IOException ex)
+            {
+                DealerTextArea.append("Player Disconnected");
+                ex.printStackTrace();
+            }
+            
+            PlayerController player = new PlayerController(socket, dealer);
+            dealer.addPlayer(player);
+        }
+                
+                    
+                
     }
+    
+    
+    
     
     public void disableStartGameButton()
     {
@@ -45,8 +85,9 @@ public class DealerForm extends javax.swing.JFrame {
     volatile ArrayList<PlayerController> players;
     ArrayList<Integer> playerCardValues;
     volatile Iterator<PlayerController> iterator;
+    String anyMessage = "";
 
-    
+    //Fills deck with each type of card from enum CardList four times to represent a 52 card deck
     private void shuffleDeck()
     {
         deck = new ArrayList<Card>();
@@ -64,6 +105,7 @@ public class DealerForm extends javax.swing.JFrame {
         DealerTextArea.append("Number of cards in current Deck: " + deck.size() );
     }
     
+    //if less than 5 players, allows the player to join.
     public void addPlayer(PlayerController player)
     {
         if(players.size() < 5)
@@ -77,6 +119,7 @@ public class DealerForm extends javax.swing.JFrame {
         }
     }
     
+    //gives player random card
     public Card dealCard()
     {
         Random random = new Random(System.currentTimeMillis());
@@ -86,6 +129,7 @@ public class DealerForm extends javax.swing.JFrame {
         return card;
     }
     
+    //Disconnects player
     public void removePlayer(Iterator iterator)
     {
         DealerTextArea.append("Player disconnected");
@@ -93,8 +137,7 @@ public class DealerForm extends javax.swing.JFrame {
     }
     
     
-    
-    
+   
     @Override
     public void run() 
     {
@@ -115,6 +158,7 @@ public class DealerForm extends javax.swing.JFrame {
             disableStartGameButton();
             
             gameStarted = true;
+            
             iterator = players.iterator();
             while(iterator.hasNext())
             {
@@ -122,6 +166,7 @@ public class DealerForm extends javax.swing.JFrame {
                 p1.sendMessage("BET");
                 p1.setBet(iterator);
             }
+            
             shuffleDeck();
             iterator = players.iterator();
             while(iterator.hasNext())
@@ -130,14 +175,57 @@ public class DealerForm extends javax.swing.JFrame {
                 p1.sendCard();
                 p1.sendCard();
             }
+            
             iterator = players.iterator();
             while(iterator.hasNext())
             {
                 PlayerController p1 = iterator.next();
                 p1.sendMessage("DECIDE");
-                p1.
+                p1.getDecision(iterator);
             }
             
+            for (PlayerController p1 : players)
+            {
+                if(p1.getPlayerCardValue() > 21)
+                {
+                   anyMessage = "You LOSE";
+                   DealerTextArea.append("Player: " + anyMessage);
+                   p1.sendMessage(anyMessage);
+                   p1.sendPlayerCount(players.size());
+                }
+                else
+                {
+                    playerCardValues.add(p1.getPlayerCardValue());
+                }
+            }
+            
+            Collections.sort(playerCardValues);
+            for(PlayerController p1 : players)
+            {
+                if(p1.getPlayerCardValue() == playerCardValues.get(playerCardValues.size() - 1))
+                {
+                    anyMessage = "You WIN";
+                    DealerTextArea.append("Player: "+ anyMessage);
+                    p1.sendMessage(anyMessage);
+                    p1.sendPlayerCount(players.size());
+                }
+                else
+                {
+                   anyMessage = "You LOSE";
+                   DealerTextArea.append("Player: " + anyMessage);
+                   p1.sendMessage(anyMessage);
+                   p1.sendPlayerCount(players.size());
+                }
+            }
+            
+            for(PlayerController p1 : players)
+            {
+                p1.newGame();
+            }
+            
+            gameStarted = false;
+            playerCardValues = new ArrayList<>();
+            anyMessage = "";
                 
             
         }

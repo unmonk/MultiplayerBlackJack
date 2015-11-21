@@ -17,6 +17,15 @@ import java.util.concurrent.*;
 //Class talks to the player clientform.
 public class PlayerController 
 {
+    // inStream/outStream =  Input and Output stream from the socket
+    // dataOutStream/dataInStream = Input and Output Stream wrapper for Strings
+    // objectStream = Input and Output Stream wrapper for Objects
+    // socket = connection socket
+    // bet = players current bet
+    // dealer = instance of DealerController
+    // decision = String recieved from the player HIT or STAY
+    // endGame = state of the game, over or not
+    // threadInterrupted = true when thread is interrupted
     private volatile InputStream inStream;
     private volatile OutputStream outStream;
     private DataOutputStream dataOutStream;
@@ -32,7 +41,7 @@ public class PlayerController
     Thread thread;
     
     
-    
+    //Instance creator
     public PlayerController(Socket socket, DealerController dealer)
     {
         this.socket=socket;
@@ -49,6 +58,7 @@ public class PlayerController
         }
     }
     
+    //Send string to players via writeUTF
     public void sendMessage(String message)
     {
         dataOutStream = new DataOutputStream(outStream);
@@ -62,6 +72,7 @@ public class PlayerController
         }
     }
     
+    //Sends players a count of players
     public void sendPlayerCount(int count)
     {
         try
@@ -75,6 +86,7 @@ public class PlayerController
         }
     }
     
+    //Removes player from game
     public void disconnectPlayer(Iterator iterator)
     {
         dealer.removePlayer(iterator);
@@ -94,7 +106,7 @@ public class PlayerController
     }
     
     
-    
+    //gets players bet
     public void setBet(Iterator iterator)
     {
         thread = new Thread(new Runnable()
@@ -137,11 +149,19 @@ public class PlayerController
         System.out.println("Bet placed was" + bet);
     }
     
+    //return PlayerController bet
     public int getBet()
     {
         return bet;
     }
     
+    //return PlayerControllers card value
+    public int getPlayerCardValue()
+    {
+        return playerCardValue;
+    }
+    
+    //send a random card to the player, update cardValue
     public void sendCard()
     {
         Card sendCard = dealer.dealCard();
@@ -164,6 +184,7 @@ public class PlayerController
         }
     }
     
+    //gets players HIT/STAY decisoin in a parallel thread
     public void getDecision(Iterator iterator)
     {
         while(!endGame)
@@ -190,6 +211,60 @@ public class PlayerController
             });
             
             thread.start();
+            for(int i=0; i<40; i++)
+            {
+                if(decision.equals("") && !threadInterrupted)
+                {
+                    try
+                    {
+                        Thread.sleep(1000);
+                    }
+                    catch(InterruptedException ex)
+                    {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+            System.out.println("Current player decided to: " + decision);
+            if(decision.equals("") && !threadInterrupted)
+            {
+                disconnectPlayer(iterator);
+            }
+            
+            switch(decision)
+            {
+                case "HIT":
+                    sendCard();
+                    break;
+                case "STAY":
+                    endGame();
+                    break;
+            }
+            
+        }
+    }
+    
+    //sets endgame to true
+    public void endGame()
+    {
+        endGame = true;
+    }
+    
+    //creates a new game, resets players info and resets socket connection
+    public void newGame()
+    {
+        bet = 0;
+        playerCardValue = 0;
+        decision = "";
+        endGame = false;
+        try
+        {
+            inStream = socket.getInputStream();
+            outStream = socket.getOutputStream();
+        }
+        catch(IOException ex)
+        {
+            ex.printStackTrace();
         }
     }
     
