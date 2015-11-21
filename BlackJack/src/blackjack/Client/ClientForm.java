@@ -6,9 +6,12 @@
  */
 package blackjack.Client;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.io.*;
 import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
 /**
  *
  * @author Scott
@@ -17,6 +20,135 @@ public class ClientForm extends javax.swing.JFrame {
     
     private boolean isBetPressed = false;
     private int GUIBetAmount;
+    static boolean playAgain;
+    private String decision;
+    
+    
+    public void Connect() throws Exception
+    {
+        ConnectionConfig con = new ConnectionConfig();
+        ChatBoxArea.append("Connecting");
+        con.connect();
+        InputStream input = con.getInputStream();
+        OutputStream output = con.getOutputStream();
+        Player player = new Player(input, output);
+        ChatBoxArea.append("Connected! Welcome to BlackJack.");
+        playGame(player);
+        
+    }
+    
+    public void playGame(Player player)
+    {
+        
+        disableBidButton();
+        disableDecisionButtons();
+        HitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                player.sendDecision("HIT");
+                disableDecisionButtons();
+               
+            }
+        });
+        StayButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                player.sendDecision("STAY");
+                disableDecisionButtons();
+            }
+        });
+        while(playAgain)
+        {
+            ChatBoxArea.append("Waiting for dealer to start.");
+            if(player.getMessage().equals("START"))
+            {
+                ChatBoxArea.append("Starting Game.");
+                ChatBoxArea.append("Other players placing bets...");
+                if(!player.getMessage().equals("MAKEBET"))
+                {
+                    return;
+                }
+                enableBidButton();
+                player.placeBet();
+                ChatBoxArea.append("Dealer deals to you");
+                disableBidButton();
+                player.getCard();
+                player.getCard();
+                if(!player.getMessage().equals("DECIDE"))
+                {
+                    return;
+                }
+                ChatBoxArea.append("Decide what to do!");
+                enableDecisionButtons();
+            }
+            else
+            {
+                ChatBoxArea.append("Sorry, too many players or game has already started");
+            }
+            
+            int response = JOptionPane.showConfirmDialog(null, "Do you want to play again?", "Round Ended", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (response == JOptionPane.NO_OPTION)
+            {
+                playAgain = false;
+            }
+            else if(response == JOptionPane.YES_OPTION)
+            {
+                player.newGame();
+            }
+            else if(response == JOptionPane.CLOSED_OPTION)
+            {
+                playAgain = false;
+            }
+            
+        }
+    }
+    
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(ClientForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(ClientForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(ClientForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(ClientForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new ClientForm().setVisible(true);
+            
+                playAgain = true;
+                
+                
+            }
+        });
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     //Player class for a player object
     public class Player 
@@ -118,11 +250,13 @@ public class ClientForm extends javax.swing.JFrame {
     //Helper to get a new card / hit button
     public void Hit()
     {
+        ChatBoxArea.append("You chose to HIT.");
         getCard();
     }
     //Helper for stand button
-    public void Stand()
+    public void Stay()
     {
+        ChatBoxArea.append("You chose to STAY.");
         endGame();
     }
     //stand results from dealer, add money if you won, reset stats
@@ -174,7 +308,7 @@ public class ClientForm extends javax.swing.JFrame {
         BidAmountBox.setText("000");
     }
     //helper to get message from server
-    public void getMessage()
+    public String getMessage()
     {
         String message = "";
         try
@@ -185,6 +319,36 @@ public class ClientForm extends javax.swing.JFrame {
         {
             ex.printStackTrace();
             ChatBoxArea.append(ex.toString());
+        }
+        return message;
+    }
+    
+    public void sendDecision(String decision)
+    {
+        while(!endGame)
+        {
+            try
+            {
+                dataOutStream.writeUTF(decision);
+                dataOutStream.flush();
+                switch(decision)
+                {
+                    case "HIT":
+                        Hit();
+                        break;
+                    case "STAY":
+                        endGame();
+                        break;
+                            
+                }
+            }
+            catch(IOException ex)
+            {
+                ex.printStackTrace();
+                ChatBoxArea.append(ex.toString());
+            }
+         
+            
         }
     }
     //new game sets endgame to false
@@ -200,6 +364,25 @@ public class ClientForm extends javax.swing.JFrame {
      */
     public ClientForm() {
         initComponents();
+    }
+    
+    private void enableBidButton()
+    {
+        SubmitBidButton.setVisible(true);
+    }
+    private void disableBidButton()
+    {
+        SubmitBidButton.setVisible(false);
+    }
+    private void enableDecisionButtons()
+    {
+       StayButton.setVisible(true);
+       HitButton.setVisible(true);
+    }
+    private void disableDecisionButtons()
+    {
+        StayButton.setVisible(false);
+        HitButton.setVisible(false);
     }
     
     @SuppressWarnings("unchecked")
@@ -314,9 +497,19 @@ public class ClientForm extends javax.swing.JFrame {
 
         HitButton.setText("HIT");
         HitButton.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(250, 0, 50), 1, true));
+        HitButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                HitButtonActionPerformed(evt);
+            }
+        });
 
         StayButton.setText("STAY");
         StayButton.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(250, 0, 50), 1, true));
+        StayButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                StayButtonActionPerformed(evt);
+            }
+        });
 
         cardsTotalLbael.setText("Cards Total:");
 
@@ -544,40 +737,18 @@ public class ClientForm extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_SubmitBidButtonActionPerformed
 
+    private void HitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HitButtonActionPerformed
+        
+    }//GEN-LAST:event_HitButtonActionPerformed
+
+    private void StayButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_StayButtonActionPerformed
+
+    }//GEN-LAST:event_StayButtonActionPerformed
+
     /**
      * @param args the command line arguments
      */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(ClientForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(ClientForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(ClientForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(ClientForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new ClientForm().setVisible(true);
-            }
-        });
-    }
+    
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField BidAmountBox;

@@ -292,6 +292,9 @@
               </Border>
             </Property>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="HitButtonActionPerformed"/>
+          </Events>
         </Component>
         <Component class="javax.swing.JButton" name="StayButton">
           <Properties>
@@ -304,6 +307,9 @@
               </Border>
             </Property>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="StayButtonActionPerformed"/>
+          </Events>
         </Component>
         <Component class="javax.swing.JLabel" name="cardsTotalLbael">
           <Properties>
