@@ -5,7 +5,8 @@
  *  including all related and neighboring rights, to the extent allowed by law.
  */
 package blackjack.Server;
-import blackjack.Server.DealerForm.DealerController;
+import blackjack.Server.DealerController;
+import blackjack.Server.DealerForm;
 import java.io.*;
 import java.net.*;
 import java.util.Iterator;

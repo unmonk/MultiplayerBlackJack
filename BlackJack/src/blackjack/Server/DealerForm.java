@@ -5,14 +5,10 @@
  *  including all related and neighboring rights, to the extent allowed by law.
  */
 package blackjack.Server;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Random;
+
 
 /**
  *
@@ -20,52 +16,71 @@ import java.util.Random;
  */
 public class DealerForm extends javax.swing.JFrame {
 
-    public boolean gameStarted = false;
-    public boolean startGameButton = false;
+    
+    public static boolean gameStarted = false;
+    public static boolean startGameButton = false;
     /**
      * Creates new form DealerForm
      */
     public DealerForm() 
     {
+        setTitle("Dealer");
         initComponents();
-        ServerSocket servsocket = null;
+        initDealer();
+        
+    }
+    
+    private void initDealer()
+    {
+           ServerSocket servsocket = null;
         try
         {
-            servsocket = new ServerSocket(7676);
+            servsocket = new ServerSocket(7776);
+            System.out.println("Socket Worked");
         }
         catch(IOException ex)
         {
             DealerTextArea.append(ex.toString());
+            System.out.println("Socket Failed");
             ex.printStackTrace();
         }
         gameStarted = false;
         DealerController dealer = new DealerController();
+        System.out.println("Starting Thread");
         new Thread(dealer).start();
-        while(!gameStarted)
+        System.out.println("Thread Started, gameStarted=" + gameStarted);
+        while(gameStarted = false)
         {
+            System.out.println("Entered While Loop");
             Socket socket = null;
             try
             {
                 socket = servsocket.accept();
+                System.out.println("Socket Worked");
             }
             catch(IOException ex)
             {
-                DealerTextArea.append("Player Disconnected");
+                DealerTextArea.append("Player Disconnected\n");
+                System.out.println("Socket Failed");
                 ex.printStackTrace();
             }
             
             PlayerController player = new PlayerController(socket, dealer);
+            System.out.println("Player Made");
             dealer.addPlayer(player);
+            System.out.println("Player Added");
+            System.out.println("ThreadWorked");
         }
                 
-                    
-                
+          
     }
     
+    public void appendDealerBox(String message)
+    {
+        DealerTextArea.append(message);
+    }
     
-    
-    
-    public void disableStartGameButton()
+    public static void disableStartGameButton()
     {
         StartGameButton.setVisible(false);
     }
@@ -76,163 +91,7 @@ public class DealerForm extends javax.swing.JFrame {
     
     
     
-    public class DealerController implements Runnable
-{
-    Card card;
-    private ArrayList<Card> deck;
-    volatile ArrayList<PlayerController> players;
-    ArrayList<Integer> playerCardValues;
-    volatile Iterator<PlayerController> iterator;
-    String anyMessage = "";
-
-    //Fills deck with each type of card from enum CardList four times to represent a 52 card deck
-    private void shuffleDeck()
-    {
-        deck = new ArrayList<Card>();
-        for(CardList thisCard:CardList.values())
-        {
-            card = new Card(thisCard);
-            deck.add(card);
-            card = new Card(thisCard);
-            deck.add(card);
-            card = new Card(thisCard);
-            deck.add(0, card);
-            card = new Card(thisCard);
-            deck.add(2, card);
-        }
-        DealerTextArea.append("Number of cards in current Deck: " + deck.size() );
-    }
     
-    //if less than 5 players, allows the player to join.
-    public void addPlayer(PlayerController player)
-    {
-        if(players.size() < 5)
-        {
-            players.add(player);
-            DealerTextArea.append("Player joined the game");
-        }
-        else
-        {
-            player.sendMessage("Sorry, too many players or game has already started");
-        }
-    }
-    
-    //gives player random card
-    public Card dealCard()
-    {
-        Random random = new Random(System.currentTimeMillis());
-        int i = random.nextInt(deck.size());
-        card = deck.get(i);
-        deck.remove(i);
-        return card;
-    }
-    
-    //Disconnects player
-    public void removePlayer(Iterator iterator)
-    {
-        DealerTextArea.append("Player disconnected");
-        iterator.remove();
-    }
-    
-    
-   
-    @Override
-    public void run() 
-    {
-        playerCardValues = new ArrayList<>();
-        players = new ArrayList<>();
-        while(true)
-        {
-            DealerTextArea.append("Click start to start the game");
-            if(!startGameButton)
-            {
-                return;
-            }
-            for(PlayerController p1 : players)
-            {
-                p1.sendMessage("START");
-            }
-            startGameButton=false;
-            disableStartGameButton();
-            
-            gameStarted = true;
-            
-            iterator = players.iterator();
-            while(iterator.hasNext())
-            {
-                PlayerController p1 = iterator.next();
-                p1.sendMessage("BET");
-                p1.setBet(iterator);
-            }
-            
-            shuffleDeck();
-            iterator = players.iterator();
-            while(iterator.hasNext())
-            {
-                PlayerController p1 = iterator.next();
-                p1.sendCard();
-                p1.sendCard();
-            }
-            
-            iterator = players.iterator();
-            while(iterator.hasNext())
-            {
-                PlayerController p1 = iterator.next();
-                p1.sendMessage("DECIDE");
-                p1.getDecision(iterator);
-            }
-            
-            for (PlayerController p1 : players)
-            {
-                if(p1.getPlayerCardValue() > 21)
-                {
-                   anyMessage = "You LOSE";
-                   DealerTextArea.append("Player: " + anyMessage);
-                   p1.sendMessage(anyMessage);
-                   p1.sendPlayerCount(players.size());
-                }
-                else
-                {
-                    playerCardValues.add(p1.getPlayerCardValue());
-                }
-            }
-            
-            Collections.sort(playerCardValues);
-            for(PlayerController p1 : players)
-            {
-                if(p1.getPlayerCardValue() == playerCardValues.get(playerCardValues.size() - 1))
-                {
-                    anyMessage = "You WIN";
-                    DealerTextArea.append("Player: "+ anyMessage);
-                    p1.sendMessage(anyMessage);
-                    p1.sendPlayerCount(players.size());
-                }
-                else
-                {
-                   anyMessage = "You LOSE";
-                   DealerTextArea.append("Player: " + anyMessage);
-                   p1.sendMessage(anyMessage);
-                   p1.sendPlayerCount(players.size());
-                }
-            }
-            
-            for(PlayerController p1 : players)
-            {
-                p1.newGame();
-            }
-            
-            gameStarted = false;
-            playerCardValues = new ArrayList<>();
-            anyMessage = "";
-                
-            
-        }
-        
-    }
-    
-    
-    
-}
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -332,16 +191,19 @@ public class DealerForm extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> {
-            new DealerForm().setVisible(true);
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            
+            public void run() {
+                new DealerForm().setVisible(true);
+            }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JTextArea DealerTextArea;
-    private javax.swing.JButton StartGameButton;
+    public static javax.swing.JTextArea DealerTextArea;
+    public static javax.swing.JButton StartGameButton;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JLabel playerCount;
+    public javax.swing.JLabel playerCount;
     private javax.swing.JLabel playerCountLabel;
     // End of variables declaration//GEN-END:variables
 }

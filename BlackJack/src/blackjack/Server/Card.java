@@ -6,7 +6,6 @@
  */
 package blackjack.Server;
 
-import blackjack.Client.*;
 import java.io.Serializable;
 /**
  *
