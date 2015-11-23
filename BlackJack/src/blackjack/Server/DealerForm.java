@@ -10,6 +10,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import javax.swing.SwingUtilities;
 
 
 /**
@@ -21,6 +22,28 @@ public class DealerForm extends javax.swing.JFrame {
     
     public static boolean gameStarted;
     public static boolean startGameButton = false;
+    public static int playerCounts = 0;
+
+    public static void appendText(String message) {
+    SwingUtilities.invokeLater(new Runnable() {
+    public void run() {
+      // Here, we can safely update the GUI
+      // because we'll be called from the
+      // event dispatch thread
+      DealerTextArea.append(message);
+    }
+  });
+}
+    
+     public static void updatePlayerCount() {
+    SwingUtilities.invokeLater(new Runnable() {
+    public void run() {
+      playerCounts++;
+      playerCount.setText(Integer.toString(playerCounts));
+      
+    }
+  });
+}
     /**
      * Creates new form DealerForm
      */
@@ -29,7 +52,9 @@ public class DealerForm extends javax.swing.JFrame {
         setTitle("Dealer");
         initComponents();
         
+        
     }
+    
     
     public static boolean getStartGame()
     {
@@ -46,7 +71,7 @@ public class DealerForm extends javax.swing.JFrame {
         }
         catch(IOException ex)
         {
-            DealerForm.appendDealerBox(ex.toString());
+            DealerForm.appendText(ex.toString());
            
             ex.printStackTrace();
         }
@@ -54,19 +79,20 @@ public class DealerForm extends javax.swing.JFrame {
         DealerController dealer = new DealerController();
         new Thread(dealer).start();
       
-        while(gameStarted = false)
+        while(gameStarted == false)
         {
             
             Socket socket = null;
             try
             {
                 socket = servsocket.accept();
+                System.out.println("DEBUG: Player Joined");
                 
             }
             catch(IOException ex)
             {
-                DealerForm.appendDealerBox("Player Disconnected\n");
-                
+                DealerForm.appendText("Player Disconnected\n");
+                System.out.println("DEBUG: Player Left");
                 ex.printStackTrace();
             }
             
@@ -74,17 +100,14 @@ public class DealerForm extends javax.swing.JFrame {
             
             dealer.addPlayer(player);
             
-            DealerForm.appendDealerBox("Player: " + player.toString() + "Connected \n");
+            DealerForm.appendText("Player: " + player.toString() + "Connected \n");
             
         }
                 
           
     }
     
-    public static void appendDealerBox(String message)
-    {
-        DealerTextArea.append(message);
-    }
+
     
     public static void disableStartGameButton()
     {
@@ -165,6 +188,7 @@ public class DealerForm extends javax.swing.JFrame {
 
     private void StartGameButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_StartGameButtonActionPerformed
         startGameButton=true;
+        
     }//GEN-LAST:event_StartGameButtonActionPerformed
 
     /**
@@ -201,6 +225,7 @@ public class DealerForm extends javax.swing.JFrame {
             
             public void run() {
                 new DealerForm().setVisible(true);
+                
             }
         });
         
@@ -209,28 +234,30 @@ public class DealerForm extends javax.swing.JFrame {
         {
             servsocket = new ServerSocket(7776);
             
+            
         }
         catch(IOException ex)
         {
-            DealerForm.appendDealerBox(ex.toString());
+            DealerForm.appendText(ex.toString());
             ex.printStackTrace();
         }
         gameStarted = false;
         DealerController dealer = new DealerController();
         new Thread(dealer).start();
       
-        while(gameStarted = false)
+        while(gameStarted == false)
         {
             
             Socket socket = null;
             try
             {
                 socket = servsocket.accept();
+                updatePlayerCount();
                 
             }
             catch(IOException ex)
             {
-                DealerForm.appendDealerBox("Player Disconnected\n");
+                DealerForm.appendText("Player Disconnected\n");
                 
                 ex.printStackTrace();
             }
@@ -239,7 +266,7 @@ public class DealerForm extends javax.swing.JFrame {
             
             dealer.addPlayer(player);
             
-            DealerForm.appendDealerBox("Player: " + player.toString() + "Connected \n");
+            DealerForm.appendText("Player: " + player.toString() + "Connected \n");
             
         }
         
@@ -250,7 +277,7 @@ public class DealerForm extends javax.swing.JFrame {
     public static javax.swing.JTextArea DealerTextArea;
     public static javax.swing.JButton StartGameButton;
     private javax.swing.JScrollPane jScrollPane1;
-    public javax.swing.JLabel playerCount;
+    public static javax.swing.JLabel playerCount;
     private javax.swing.JLabel playerCountLabel;
     // End of variables declaration//GEN-END:variables
 }

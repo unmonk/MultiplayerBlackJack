@@ -3,13 +3,11 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/Scott/Documents/GitHub/MultiplayerBlackJack/BlackJack/src/blackjack/Client/ConnectionConfig.java</file>
-            <file>file:/C:/Users/Scott/Documents/GitHub/MultiplayerBlackJack/BlackJack/src/blackjack/Client/Card.java</file>
-            <file>file:/C:/Users/Scott/Documents/GitHub/MultiplayerBlackJack/BlackJack/src/blackjack/Client/ClientForm.java</file>
-            <file>file:/C:/Users/Scott/Documents/GitHub/MultiplayerBlackJack/BlackJack/src/blackjack/Server/Card.java</file>
             <file>file:/C:/Users/Scott/Documents/GitHub/MultiplayerBlackJack/BlackJack/src/blackjack/Server/DealerForm.java</file>
+            <file>file:/C:/Users/Scott/Documents/GitHub/MultiplayerBlackJack/BlackJack/src/blackjack/Client/ClientForm.java</file>
+            <file>file:/C:/Users/Scott/Documents/GitHub/MultiplayerBlackJack/BlackJack/src/blackjack/Server/DealerController.java</file>
             <file>file:/C:/Users/Scott/Documents/GitHub/MultiplayerBlackJack/BlackJack/src/blackjack/Server/PlayerController.java</file>
-            <file>file:/C:/Users/Scott/Documents/GitHub/MultiplayerBlackJack/BlackJack/src/blackjack/BlackJack.java</file>
+            <file>file:/C:/Users/Scott/Documents/GitHub/MultiplayerBlackJack/BlackJack/src/blackjack/Client/Card.java</file>
         </group>
     </open-files>
 </project-private>

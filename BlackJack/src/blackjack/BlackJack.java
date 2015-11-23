@@ -19,10 +19,8 @@ public class BlackJack {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        JFrame dealer = new DealerForm();
-        JFrame client1 = new ClientForm();
-        JFrame client2 = new ClientForm();
-        JFrame client3 = new ClientForm();
+        new DealerForm().setVisible(true);
+        new ClientForm().setVisible(true);
     }
     
 }

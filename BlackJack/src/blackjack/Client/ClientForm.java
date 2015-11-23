@@ -6,12 +6,16 @@
  */
 package blackjack.Client;
 
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.io.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 /**
  *
  * @author Scott
@@ -20,27 +24,52 @@ public class ClientForm extends javax.swing.JFrame {
     
     private boolean isBetPressed = false;
     private int GUIBetAmount;
-    static boolean playAgain;
+    static boolean playAgain = true;
     private String decision;
+    
+   
+      
     
     
     private void Connect() throws Exception
     {
-        playAgain = true;
         ConnectionConfig con = new ConnectionConfig();
         ChatBoxArea.append("Connecting\n");
+        System.out.println("DEBUG: Reached Connecting");
         con.connect();
+        System.out.println("DEBUG: Reached con.connect()");
         InputStream input = con.getInputStream();
         OutputStream output = con.getOutputStream();
+        System.out.println("DEBUG: Streams were assigned");
         Player player = new Player(input, output);
+        System.out.println("DEBUG: Player object created");
         ChatBoxArea.append("Connected! Welcome to BlackJack.\n");
+        System.out.println("DEBUG: Connected wrote to screen");
         playGame(player);
+        System.out.println("DEBUG: playGame() Started"); 
         
+    }
+    
+    private void showEndOptions(Player player)
+    {
+        int response = JOptionPane.showConfirmDialog(null, "Do you want to play again?", "Round Ended", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (response == JOptionPane.NO_OPTION)
+            {
+                playAgain = false;
+            }
+            else if(response == JOptionPane.YES_OPTION)
+            {
+                player.newGame();
+            }
+            else if(response == JOptionPane.CLOSED_OPTION)
+            {
+                playAgain = false;
+            }
     }
     
     public void playGame(Player player)
     {
-        
+        System.out.println("DEBUG: inside playGame()");
         disableBidButton();
         disableDecisionButtons();
         HitButton.addActionListener(new ActionListener() {
@@ -59,7 +88,7 @@ public class ClientForm extends javax.swing.JFrame {
                 disableDecisionButtons();
             }
         });
-        while(playAgain = true)
+        while(playAgain == true)
         {
             ChatBoxArea.append("Waiting for dealer to start.\n");
             if(player.getMessage().equals("START"))
@@ -88,19 +117,7 @@ public class ClientForm extends javax.swing.JFrame {
                 ChatBoxArea.append("Sorry, too many players or game has already started \n");
             }
             
-            int response = JOptionPane.showConfirmDialog(null, "Do you want to play again?", "Round Ended", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-            if (response == JOptionPane.NO_OPTION)
-            {
-                playAgain = false;
-            }
-            else if(response == JOptionPane.YES_OPTION)
-            {
-                player.newGame();
-            }
-            else if(response == JOptionPane.CLOSED_OPTION)
-            {
-                playAgain = false;
-            }
+            
             
         }
     }
@@ -128,8 +145,7 @@ public class ClientForm extends javax.swing.JFrame {
         playerCards = new ArrayList<Card>();
         dataInStream = new DataInputStream(inStream);
         dataOutStream = new DataOutputStream(outStream);
-        setCashLabel(cash);
-        setCardTotal(cardsValue);
+        
     }
     
     //Places a bet if the betButton has been pressed
@@ -137,7 +153,7 @@ public class ClientForm extends javax.swing.JFrame {
     {
         ChatBoxArea.append("Place a bet! \n");
         
-        if (isBetPressed = false)
+        if (isBetPressed == false)
         {
             ChatBoxArea.append("Please press Submit Bid \n");
             placeBet();
@@ -278,7 +294,7 @@ public class ClientForm extends javax.swing.JFrame {
     
     public void sendDecision(String decision)
     {
-        while(endGame = false)
+        while(endGame == false)
         {
             try
             {
@@ -312,21 +328,14 @@ public class ClientForm extends javax.swing.JFrame {
     }
     
 }
-
+//end PlayerClass
     /**
      * Creates new form ClientForm
      */
-    public ClientForm() {
+    public ClientForm() 
+    {
         initComponents();
-        ClearValues();
-        try 
-        {
-            Connect();
-        } 
-        catch (Exception ex) 
-        {
-            ChatBoxArea.append(ex.toString());
-        }
+        
     }
     
     private void ClearValues()
@@ -407,6 +416,7 @@ public class ClientForm extends javax.swing.JFrame {
         StayButton = new javax.swing.JButton();
         cardsTotalLbael = new javax.swing.JLabel();
         CardsTotal = new javax.swing.JLabel();
+        ConnectButton = new javax.swing.JButton();
         DealerCardsPanel = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         dealerCard1 = new javax.swing.JLabel();
@@ -442,13 +452,11 @@ public class ClientForm extends javax.swing.JFrame {
         ChatPanelLayout.setHorizontalGroup(
             ChatPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(ChatPanelLayout.createSequentialGroup()
-                .addComponent(ChatBoxMessageBox)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(ChatBoxSendButton, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(ChatBoxMessageBox, javax.swing.GroupLayout.PREFERRED_SIZE, 202, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(ChatBoxSendButton, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, ChatPanelLayout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 236, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addComponent(jScrollPane1)
         );
         ChatPanelLayout.setVerticalGroup(
             ChatPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -519,6 +527,13 @@ public class ClientForm extends javax.swing.JFrame {
         CardsTotal.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         CardsTotal.setText("15");
 
+        ConnectButton.setText("Connect");
+        ConnectButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ConnectButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout PlayerControlPanelLayout = new javax.swing.GroupLayout(PlayerControlPanel);
         PlayerControlPanel.setLayout(PlayerControlPanelLayout);
         PlayerControlPanelLayout.setHorizontalGroup(
@@ -532,11 +547,6 @@ public class ClientForm extends javax.swing.JFrame {
                             .addComponent(IncreaseBidButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(BidAmountBox))
                         .addGroup(PlayerControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(PlayerControlPanelLayout.createSequentialGroup()
-                                .addGap(267, 267, 267)
-                                .addComponent(HitButton, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(StayButton, javax.swing.GroupLayout.PREFERRED_SIZE, 106, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(PlayerControlPanelLayout.createSequentialGroup()
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(PlayerControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -552,7 +562,14 @@ public class ClientForm extends javax.swing.JFrame {
                                 .addGap(78, 78, 78)
                                 .addComponent(cardsTotalLbael)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(CardsTotal)))))
+                                .addComponent(CardsTotal))
+                            .addGroup(PlayerControlPanelLayout.createSequentialGroup()
+                                .addGap(267, 267, 267)
+                                .addComponent(HitButton, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(StayButton, javax.swing.GroupLayout.PREFERRED_SIZE, 106, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(ConnectButton)))))
                 .addContainerGap())
         );
         PlayerControlPanelLayout.setVerticalGroup(
@@ -563,7 +580,9 @@ public class ClientForm extends javax.swing.JFrame {
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, PlayerControlPanelLayout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(IncreaseBidButton))
-                    .addComponent(StayButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(PlayerControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(StayButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(ConnectButton))
                     .addComponent(HitButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(PlayerControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -610,7 +629,7 @@ public class ClientForm extends javax.swing.JFrame {
                     .addComponent(dealerCard5, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                     .addComponent(dealerCard6, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addContainerGap(40, Short.MAX_VALUE)))
         );
         DealerCardsPanelLayout.setVerticalGroup(
             DealerCardsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -651,7 +670,7 @@ public class ClientForm extends javax.swing.JFrame {
                 .addComponent(playerCard5, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(playerCard6, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(33, Short.MAX_VALUE))
+                .addContainerGap(63, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, PlayerCardsPanelLayout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(yourCards)
@@ -681,10 +700,10 @@ public class ClientForm extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(DealerCardsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(PlayerCardsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGap(18, 18, Short.MAX_VALUE)
-                        .addComponent(ChatPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(PlayerCardsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(DealerCardsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGap(48, 48, 48)
+                        .addComponent(ChatPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addComponent(PlayerControlPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -747,6 +766,19 @@ public class ClientForm extends javax.swing.JFrame {
 
     }//GEN-LAST:event_StayButtonActionPerformed
 
+    private void ConnectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ConnectButtonActionPerformed
+        try
+        {
+            Connect();
+            ConnectButton.setVisible(false);
+        }
+        catch(Exception ex)
+        {
+            ex.printStackTrace();
+            ChatBoxArea.append(ex.toString());
+        }
+    }//GEN-LAST:event_ConnectButtonActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -760,6 +792,7 @@ public class ClientForm extends javax.swing.JFrame {
     private javax.swing.JTextField ChatBoxMessageBox;
     private javax.swing.JButton ChatBoxSendButton;
     private javax.swing.JPanel ChatPanel;
+    private javax.swing.JButton ConnectButton;
     private javax.swing.JLabel CurrentCashCHANGE;
     private javax.swing.JLabel CurrentCashLabel;
     private javax.swing.JPanel DealerCardsPanel;

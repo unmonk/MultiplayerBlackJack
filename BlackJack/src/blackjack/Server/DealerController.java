@@ -39,7 +39,7 @@ public class DealerController implements Runnable
             card = new Card(thisCard);
             deck.add(2, card);
         }
-        DealerForm.appendDealerBox("Number of cards in current Deck:" + deck.size() + "\n");
+        DealerForm.appendText("Number of cards in current Deck:" + deck.size() + "\n");
         
     }
     
@@ -49,7 +49,7 @@ public class DealerController implements Runnable
         if(players.size() < 5)
         {
             players.add(player);
-            DealerForm.appendDealerBox("Player joined the game\n");
+            DealerForm.appendText("Player joined the game\n");
         }
         else
         {
@@ -71,7 +71,7 @@ public class DealerController implements Runnable
     public void removePlayer(Iterator iterator)
     {
         
-        DealerForm.appendDealerBox("Player disconnected\n");
+        DealerForm.appendText("Player disconnected\n");
         iterator.remove();
     }
     
@@ -88,20 +88,20 @@ public class DealerController implements Runnable
         while (true) 
         {
             //DealerForm.appendDealerBox("Press Start to begin game! \n");
-            if (startGame = false)
+            if (startGame == false)
             {
                 
-                System.out.println("I am inside IF Statement");
+                System.out.println("DEBUG: I am inside IF Statement");
                 return;
             }
             else
             {
-                System.out.println("Test entered Else");
+                System.out.println("DEBUG: Test entered Else");
             
                 for (PlayerController pl : players) 
                 {
                     pl.sendMessage("START");
-                    System.out.println("I sent start");
+                    System.out.println("DEBUG: I sent start");
                 }
 
                 DealerForm.gameStarted = true;

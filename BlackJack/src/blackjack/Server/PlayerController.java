@@ -131,7 +131,7 @@ public class PlayerController
         
         for(int i=0; i<40; i++)
         {
-            if(bet == 0 && !threadInterrupted)
+            if(bet == 0 && threadInterrupted == false)
                 try
                 {
                     thread.sleep(1000);
@@ -187,7 +187,7 @@ public class PlayerController
     //gets players HIT/STAY decisoin in a parallel thread
     public void getDecision(Iterator iterator)
     {
-        while(!endGame)
+        while(endGame == false)
         {
             dataInStream = new DataInputStream(inStream);
             decision = "";
@@ -213,7 +213,7 @@ public class PlayerController
             thread.start();
             for(int i=0; i<40; i++)
             {
-                if(decision.equals("") && !threadInterrupted)
+                if(decision.equals("") && threadInterrupted == false)
                 {
                     try
                     {
@@ -226,7 +226,7 @@ public class PlayerController
                 }
             }
             System.out.println("Current player decided to: " + decision);
-            if(decision.equals("") && !threadInterrupted)
+            if(decision.equals("") && threadInterrupted == false)
             {
                 disconnectPlayer(iterator);
             }
