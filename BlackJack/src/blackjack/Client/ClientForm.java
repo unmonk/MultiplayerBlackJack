@@ -11,11 +11,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.io.*;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 /**
  *
  * @author Scott
@@ -45,6 +47,7 @@ public class ClientForm extends javax.swing.JFrame {
         System.out.println("DEBUG: Player object created");
         ChatBoxArea.append("Connected! Welcome to BlackJack.\n");
         System.out.println("DEBUG: Connected wrote to screen");
+        ConnectButton.setVisible(false);
         playGame(player);
         System.out.println("DEBUG: playGame() Started"); 
         
@@ -69,57 +72,83 @@ public class ClientForm extends javax.swing.JFrame {
     
     public void playGame(Player player)
     {
-        System.out.println("DEBUG: inside playGame()");
-        disableBidButton();
-        disableDecisionButtons();
-        HitButton.addActionListener(new ActionListener() {
+        SwingWorker<Void, String> playGameWorker = new SwingWorker<Void, String>()
+        {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                player.sendDecision("HIT");
+            protected Void doInBackground() throws Exception 
+            {
+                System.out.println("DEBUG: inside playGame()");
+                disableBidButton();
                 disableDecisionButtons();
-               
+                HitButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        player.sendDecision("HIT");
+                        disableDecisionButtons();
+
+                    }
+                });
+                StayButton.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        player.sendDecision("STAY");
+                        disableDecisionButtons();
+                    }
+                });
+                while(playAgain == true)
+                {
+                    publish("Waiting for dealer to start.\n");
+                    //ChatBoxArea.append("Waiting for dealer to start.\n");
+                    if(player.getMessage().equals("START"))
+                    {
+                        publish("Starting Game. \n" + "Other players placing bets... \n" );
+                        //ChatBoxArea.append("Starting Game. \n");
+                        //ChatBoxArea.append("Other players placing bets... \n");
+                        if(!player.getMessage().equals("BET"))
+                        {
+                            break;
+                        }
+                        enableBidButton();
+                        player.placeBet();
+                        publish("Dealer deals to you \n");
+                        //ChatBoxArea.append("Dealer deals to you \n");
+                        disableBidButton();
+                        player.getCard();
+                        player.getCard();
+                        if(!player.getMessage().equals("DECIDE"))
+                        {
+                            break;
+                        }
+                        //ChatBoxArea.append("Decide what to do! \n");
+                        publish("Decide what to do! \n");
+                        enableDecisionButtons();
+                    }
+                    else
+                    {
+                        publish("Sorry, too many players or game has already started \n");
+                       // ChatBoxArea.append("Sorry, too many players or game has already started \n");
+                    }
+
+
+
+                }
+                return null;
             }
-        });
-        StayButton.addActionListener(new ActionListener() {
 
             @Override
-            public void actionPerformed(ActionEvent e) {
-                player.sendDecision("STAY");
-                disableDecisionButtons();
-            }
-        });
-        while(playAgain == true)
-        {
-            ChatBoxArea.append("Waiting for dealer to start.\n");
-            if(player.getMessage().equals("START"))
+            protected void process(List<String> chunks) 
             {
-                ChatBoxArea.append("Starting Game. \n");
-                ChatBoxArea.append("Other players placing bets... \n");
-                if(!player.getMessage().equals("BET"))
+                for(String text : chunks)
                 {
-                    return;
+                    ChatBoxArea.append(text);
                 }
-                enableBidButton();
-                player.placeBet();
-                ChatBoxArea.append("Dealer deals to you \n");
-                disableBidButton();
-                player.getCard();
-                player.getCard();
-                if(!player.getMessage().equals("DECIDE"))
-                {
-                    return;
-                }
-                ChatBoxArea.append("Decide what to do! \n");
-                enableDecisionButtons();
-            }
-            else
-            {
-                ChatBoxArea.append("Sorry, too many players or game has already started \n");
+               
             }
             
             
-            
-        }
+        };
+        playGameWorker.execute();
     }
 
     
@@ -151,69 +180,110 @@ public class ClientForm extends javax.swing.JFrame {
     //Places a bet if the betButton has been pressed
     public void placeBet()
     {
-        ChatBoxArea.append("Place a bet! \n");
-        
-        if (isBetPressed == false)
+        SwingWorker<Void, String> placebetWorker = new SwingWorker<Void, String>()
         {
-            ChatBoxArea.append("Please press Submit Bid \n");
-            placeBet();
-        }
-        else
-        {
-            betAmount = GUIBetAmount;
-            int newMoney = cash - betAmount;
-            setCashLabel(newMoney);
-            clearBidLabel();
-            isBetPressed = false;
-        }
-        
+            @Override
+            protected Void doInBackground() throws Exception 
+            {
+                publish("Place a bet! \n");
+                //ChatBoxArea.append("Place a bet! \n");
+
+                if (isBetPressed == false)
+                {
+                    publish("Please Press Submit Bid \n");
+                    //ChatBoxArea.append("Please press Submit Bid \n");
+                    placeBet();
+                }
+                else
+                {
+                    betAmount = GUIBetAmount;
+                    int newMoney = cash - betAmount;
+                    setCashLabel(newMoney);
+                    clearBidLabel();
+                    isBetPressed = false;
+                }
+                return null;
+            }
+
+            @Override
+            protected void process(List<String> chunks)
+            {
+                for(String text : chunks)
+                {
+                    ChatBoxArea.append(text);
+                }
+                
+            }
+            
+        };
+        placebetWorker.execute();
     }
     
     public void getCard()
     {
-       try
+       SwingWorker<Void, String> getCardWorker = new SwingWorker<Void, String>()
        {
-           //get a card, and add to playerCards
-           objectStream = new ObjectInputStream(inStream);
-           Card card = (Card) objectStream.readObject();
-           cardsValue = cardsValue + card.getValue();
-           ChatBoxArea.append("Recieved: " + card.getCardName() + "\n");
-           setCardTotal(cardsValue);
-           playerCards.add(card);
-           cardCount++;
-           
-           //Set Correct Image
-           String whichImage = "Images/" + card.getCardName() + ".png";
-           ImageIcon cardImage = new ImageIcon(whichImage);
-           switch(cardCount)
+           @Override
+           protected Void doInBackground() throws Exception 
            {
-               case 1:
-                   playerCard1.setIcon(cardImage);
-                   break;
-               case 2:
-                   playerCard2.setIcon(cardImage);
-                   break;
-               case 3:
-                   playerCard3.setIcon(cardImage);
-                   break;
-               case 4:
-                   playerCard4.setIcon(cardImage);
-                   break;
-               case 5:
-                   playerCard5.setIcon(cardImage);
-                   break;
-               case 6:
-                   playerCard6.setIcon(cardImage);
-                   break;
-               
+               try
+                {
+                    //get a card, and add to playerCards
+                    objectStream = new ObjectInputStream(inStream);
+                    Card card = (Card) objectStream.readObject();
+                    cardsValue = cardsValue + card.getValue();
+                    publish("Recieved: " + card.getCardName() + "\n");
+                    //ChatBoxArea.append("Recieved: " + card.getCardName() + "\n");
+                    setCardTotal(cardsValue);
+                    playerCards.add(card);
+                    cardCount++;
+
+                    //Set Correct Image
+                    String whichImage = "Images/" + card.getCardName() + ".png";
+                    ImageIcon cardImage = new ImageIcon(whichImage);
+                    switch(cardCount)
+                    {
+                        case 1:
+                            playerCard1.setIcon(cardImage);
+                            break;
+                        case 2:
+                            playerCard2.setIcon(cardImage);
+                            break;
+                        case 3:
+                            playerCard3.setIcon(cardImage);
+                            break;
+                        case 4:
+                            playerCard4.setIcon(cardImage);
+                            break;
+                        case 5:
+                            playerCard5.setIcon(cardImage);
+                            break;
+                        case 6:
+                            playerCard6.setIcon(cardImage);
+                            break;
+
+                    }
+
+                } //print errors
+                catch(IOException | ClassNotFoundException ex)
+                {
+                    ex.printStackTrace();
+                    ChatBoxArea.append(ex.toString());
+                }
+               return null;
+           }
+
+           @Override
+           protected void process(List<String> chunks) {
+               for(String text : chunks)
+               {
+                   ChatBoxArea.append(text);
+               }
            }
            
-       } //print errors
-       catch(IOException | ClassNotFoundException ex)
-       {
-           ex.printStackTrace();
-           ChatBoxArea.append(ex.toString());
-       }
+           
+       };
+       getCardWorker.execute();
     }
     //Helper to get a new card / hit button
     public void Hit()
@@ -230,31 +300,54 @@ public class ClientForm extends javax.swing.JFrame {
     //stand results from dealer, add money if you won, reset stats
     public void endGame()
     {
-        endGame = true;
-        try
+        SwingWorker<Void, String> endGameWorker = new SwingWorker<Void, String>()
         {
-            String result = dataInStream.readUTF();
-            int numOfPlayers = inStream.read();
-            ChatBoxArea.append(result);
-            if(result.equals("WIN"))
+            @Override
+            protected Void doInBackground() throws Exception 
             {
-                ChatBoxArea.append("You Won! \n");
-                cash = cash + betAmount * numOfPlayers;
-                setCashLabel(cash);
+                endGame = true;
+                try
+                {
+                    String result = dataInStream.readUTF();
+                    int numOfPlayers = inStream.read();
+                    publish(result + "\n");
+                    //ChatBoxArea.append(result);
+                    if(result.equals("WIN"))
+                    {
+                        publish("You Won! \n");
+                        ChatBoxArea.append("You Won! \n");
+                        cash = cash + betAmount * numOfPlayers;
+                        setCashLabel(cash);
+                    }
+                    publish("New Balance: $" + getCash() + "\n");
+                    //ChatBoxArea.append("New Balance: $" + getCash() + "\n" );
+                }
+                catch(IOException ex)
+                {
+                    ex.printStackTrace();
+                    ChatBoxArea.append(ex.toString());
+                }
+
+                cardsValue = 0;
+                setCardTotal(cardsValue);
+                playerCards = new ArrayList<>();
+                betAmount = 0;
+                clearBidLabel();
+                return null;
             }
-            ChatBoxArea.append("New Balance: $" + getCash() + "\n" );
-        }
-        catch(IOException ex)
-        {
-            ex.printStackTrace();
-            ChatBoxArea.append(ex.toString());
-        }
-        
-        cardsValue = 0;
-        setCardTotal(cardsValue);
-        playerCards = new ArrayList<>();
-        betAmount = 0;
-        clearBidLabel();
+
+            @Override
+            protected void process(List<String> chunks) 
+            {
+                for(String text : chunks)
+                {
+                    ChatBoxArea.append(text);
+                }
+            }
+            
+        };
+        endGameWorker.execute();
+                
     }
     //helper to change the cash label
     private void setCashLabel(int cash)

@@ -214,14 +214,14 @@ public class ClientForm extends javax.swing.JFrame implements Serializable, Acti
     
     private void connect()
     {
-        ChatBoxArea.append("Connecting to Dealer");
+        ChatBoxArea.append("Connecting to Dealer\n");
         try
         {
             socket = new Socket("localhost", 6900);
             System.out.println("DEBUG: Socket Created");
             outStream = new ObjectOutputStream(socket.getOutputStream());
             inStream = new ObjectInputStream(socket.getInputStream());
-            ChatBoxArea.append("Connected to Dealer");
+            ChatBoxArea.append("Connected to Dealer\n");
             System.out.println("DEBUG: Streams Created");
         }
         catch(IOException ex)

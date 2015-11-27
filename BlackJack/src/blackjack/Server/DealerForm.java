@@ -10,7 +10,13 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 
 
 /**
@@ -23,27 +29,24 @@ public class DealerForm extends javax.swing.JFrame {
     public static boolean gameStarted;
     public static boolean startGameButton = false;
     public static int playerCounts = 0;
-
-    public static void appendText(String message) {
-    SwingUtilities.invokeLater(new Runnable() {
-    public void run() {
-      // Here, we can safely update the GUI
-      // because we'll be called from the
-      // event dispatch thread
-      DealerTextArea.append(message);
-    }
-  });
-}
+    public SwingWorker<Void, String> shuffleDeckWorker;
     
-     public static void updatePlayerCount() {
-    SwingUtilities.invokeLater(new Runnable() {
-    public void run() {
-      playerCounts++;
-      playerCount.setText(Integer.toString(playerCounts));
-      
+    
+    public static void updatePlayerCount() 
+    {
+        SwingWorker<Void, Void> updatePlayerCountWorker = new SwingWorker<Void, Void>()
+        {
+            @Override
+            protected Void doInBackground() throws Exception 
+            {
+                playerCounts++;
+                playerCount.setText(Integer.toString(playerCounts));
+                return null;
+            }
+            
+        };
+        updatePlayerCountWorker.execute();
     }
-  });
-}
     /**
      * Creates new form DealerForm
      */
@@ -51,6 +54,7 @@ public class DealerForm extends javax.swing.JFrame {
     {
         setTitle("Dealer");
         initComponents();
+        initDealer();
         
         
     }
@@ -63,48 +67,221 @@ public class DealerForm extends javax.swing.JFrame {
     private void initDealer()
     {
         
-        ServerSocket servsocket = null;
-        try
+        SwingWorker<Void, String> dealerWorker = new SwingWorker<Void, String>()
         {
-            servsocket = new ServerSocket(7776);
-            
-        }
-        catch(IOException ex)
-        {
-            DealerForm.appendText(ex.toString());
-           
-            ex.printStackTrace();
-        }
-        gameStarted = false;
-        DealerController dealer = new DealerController();
-        new Thread(dealer).start();
-      
-        while(gameStarted == false)
-        {
-            
-            Socket socket = null;
-            try
+            @Override
+            protected Void doInBackground() throws Exception 
             {
-                socket = servsocket.accept();
-                System.out.println("DEBUG: Player Joined");
-                
+                ServerSocket servsocket = null;
+                    try
+                    {
+                        servsocket = new ServerSocket(7776);
+
+                    }
+                    catch(IOException ex)
+                    {
+                        
+                        DealerTextArea.append(ex.toString());
+
+                        ex.printStackTrace();
+                    }
+                    gameStarted = false;
+                    DealerController dealer = new DealerController();
+                    StartGame();
+
+                    while(gameStarted == false)
+                    {
+
+                        Socket socket = null;
+                        try
+                        {
+                            socket = servsocket.accept();
+                            System.out.println("DEBUG: Player Joined");
+
+                        }
+                        catch(IOException ex)
+                        {
+                            publish("Player disconnected \n");
+                            //DealerForm.appendText("Player Disconnected\n");
+                            System.out.println("DEBUG: Player Left");
+                            ex.printStackTrace();
+                        }
+
+                        PlayerController player = new PlayerController(socket, dealer);
+
+                        dealer.addPlayer(player);
+                        publish("Player: " + player.toString() + "Connected \n");
+                        if(dealer.players.isEmpty() == false)
+                        {
+                            gameStarted =true;
+                        }
+
+                        //DealerForm.appendText("Player: " + player.toString() + "Connected \n");
+
+                    }
+                    return null;
             }
-            catch(IOException ex)
+
+            @Override
+            protected void process(List<String> chunks) 
             {
-                DealerForm.appendText("Player Disconnected\n");
-                System.out.println("DEBUG: Player Left");
-                ex.printStackTrace();
+                for(String text : chunks)
+                {
+                    DealerTextArea.append(text);
+                }
             }
             
-            PlayerController player = new PlayerController(socket, dealer);
             
-            dealer.addPlayer(player);
-            
-            DealerForm.appendText("Player: " + player.toString() + "Connected \n");
-            
-        }
+        };
+        dealerWorker.execute();
                 
           
+    }
+    
+    private void shuffleDeck()
+    {
+        shuffleDeckWorker = new SwingWorker<Void, String>()
+        {
+            @Override
+            protected Void doInBackground() throws Exception
+            {
+                DealerController.deck = new ArrayList<Card>();
+                for(CardList thisCard : CardList.values())
+                {
+                    DealerController.card = new Card(thisCard);
+                    DealerController.deck.add(DealerController.card);
+                    DealerController.card = new Card(thisCard);
+                    DealerController.deck.add(DealerController.card);
+                    DealerController.card = new Card(thisCard);
+                    DealerController.deck.add(0, DealerController.card);
+                    DealerController.card = new Card(thisCard);
+                    DealerController.deck.add(2, DealerController.card);
+                }
+                publish("Number of cards in current Deck: " + DealerController.deck.size() + "\n");
+                //DealerForm.appendText("Number of cards in current Deck:" + deck.size() + "\n");
+                return null;
+            }
+
+            @Override
+            protected void process(List<String> chunks) 
+            {
+                for(String text : chunks)
+                {
+                    DealerTextArea.append(text);
+                }
+                
+            }
+            
+            
+        };
+        shuffleDeckWorker.execute();      
+    }
+    
+    
+     
+     
+    //Disconnects player
+    
+    
+    private void StartGame()
+    {
+        SwingWorker<Void, Void> startGameWorker = new SwingWorker<Void, Void>()
+        {
+            @Override
+            protected Void doInBackground() throws Exception 
+            {
+                DealerController.playerCardValues = new ArrayList<>();
+                DealerController.players = new ArrayList<>();
+
+                while (true) 
+                {
+                    //DealerForm.appendDealerBox("Press Start to begin game! \n");
+                    if (DealerController.startGame == false)
+                    {
+
+                        System.out.println("DEBUG: I am inside IF Statement");
+                        break;
+                    }
+                    else
+                    {
+                        System.out.println("DEBUG: Test entered Else");
+
+                        for (PlayerController pl : DealerController.players) 
+                        {
+                            pl.sendMessage("START");
+                            System.out.println("DEBUG: I sent start");
+                        }
+
+                        gameStarted = true;
+                        DealerController.iterator = DealerController.players.iterator();
+
+                        while (DealerController.iterator.hasNext()) 
+                        {
+                            PlayerController pl = DealerController.iterator.next();
+                            pl.sendMessage("BET");
+                            pl.setBet(DealerController.iterator);
+                        }
+                        shuffleDeck();
+                        shuffleDeckWorker.cancel(true);
+                        DealerController.iterator = DealerController.players.iterator();
+
+                        while (DealerController.iterator.hasNext()) 
+                        {
+                            PlayerController pl = DealerController.iterator.next();
+                            pl.sendCard();
+                            pl.sendCard();
+                        }
+                        DealerController.iterator = DealerController.players.iterator();
+
+                        while (DealerController.iterator.hasNext()) 
+                        {
+                            PlayerController pl = DealerController.iterator.next();
+                            pl.sendMessage("DECIDE");
+                            pl.getDecision(DealerController.iterator);
+                        }
+
+                        for (PlayerController pl : DealerController.players) 
+                        {
+                            if (pl.getPlayerCardValue() > 21) 
+                            {
+                                pl.sendMessage("LOSE");
+                                pl.sendPlayerCount(DealerController.players.size());
+                            } 
+                            else 
+                            {
+                                DealerController.playerCardValues.add(pl.getPlayerCardValue());
+                            }
+                        }
+
+                        Collections.sort(DealerController.playerCardValues);
+                        for (PlayerController pl : DealerController.players) 
+                        {
+                            if (pl.getPlayerCardValue() == DealerController.playerCardValues.get(DealerController.playerCardValues.size() - 1)) 
+                            {
+                                pl.sendMessage("WIN");
+                                pl.sendPlayerCount(DealerController.players.size());
+                            }
+                            else 
+                            {
+                                pl.sendMessage("LOSE");
+                                pl.sendPlayerCount(DealerController.players.size());
+                            }
+                        }
+                        for (PlayerController pl:DealerController.players)
+                        {
+                            pl.newGame();
+                        }
+
+                        gameStarted = false;
+                        DealerController.playerCardValues = new ArrayList<>();
+                    }
+
+        
+            }
+            return null;
+        }
+    };
+        startGameWorker.execute();
     }
     
 
@@ -188,6 +365,11 @@ public class DealerForm extends javax.swing.JFrame {
 
     private void StartGameButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_StartGameButtonActionPerformed
         startGameButton=true;
+        DealerController.startGame = true;
+        StartGame();
+        StartGameButton.setVisible(false);
+        
+        
         
     }//GEN-LAST:event_StartGameButtonActionPerformed
 
@@ -229,49 +411,9 @@ public class DealerForm extends javax.swing.JFrame {
             }
         });
         
-        ServerSocket servsocket = null;
-        try
-        {
-            servsocket = new ServerSocket(7776);
-            
-            
-        }
-        catch(IOException ex)
-        {
-            DealerForm.appendText(ex.toString());
-            ex.printStackTrace();
-        }
-        gameStarted = false;
-        DealerController dealer = new DealerController();
-        new Thread(dealer).start();
-      
-        while(gameStarted == false)
-        {
-            
-            Socket socket = null;
-            try
-            {
-                socket = servsocket.accept();
-                updatePlayerCount();
-                
-            }
-            catch(IOException ex)
-            {
-                DealerForm.appendText("Player Disconnected\n");
-                
-                ex.printStackTrace();
-            }
-            
-            PlayerController player = new PlayerController(socket, dealer);
-            
-            dealer.addPlayer(player);
-            
-            DealerForm.appendText("Player: " + player.toString() + "Connected \n");
-            
+        
         }
         
-        
-    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     public static javax.swing.JTextArea DealerTextArea;

@@ -109,16 +109,21 @@ public class DealerForm extends javax.swing.JFrame
                             continueGame();
                         }
                     }
+                    catch(Exception ex)
+                    {
+                        ex.printStackTrace();
+                        DealerTextArea.append(ex.toString() + "\n");
+                    }
                     finally
                     {
                         //serverSocket.close();
                     }
                 }
-//                catch(IOException ex)
-//                {
-//                    ex.printStackTrace();
-//                    DealerTextArea.append(ex.toString() + "\n");
-//                }
+                catch(Exception ex)
+                {
+                    ex.printStackTrace();
+                    DealerTextArea.append(ex.toString() + "\n");
+                }
                 finally
                 {
                     //close();
