@@ -5,9 +5,11 @@
  */
 package blackestjack.Shared;
 import java.util.*;
-/**
- *
+/* 
  * @author Scott
+ * @author Jessica
+ * CS 412 Project
+ * 2 December 2015
  */
 public class Player
 {

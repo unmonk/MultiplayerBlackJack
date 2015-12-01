@@ -16,9 +16,11 @@ import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
-/**
- *
+/* 
  * @author Scott
+ * @author Jessica
+ * CS 412 Project
+ * 2 December 2015
  */
 public class Server extends javax.swing.JFrame 
 {
@@ -307,7 +309,7 @@ public class Server extends javax.swing.JFrame
                             dealerServer[i].sendMessage("ENDGAME");
                         }
                     }
-                    else if(playerTotal > dealersTotal && playerTotal < 21)
+                    else if(playerTotal > dealersTotal && playerTotal <= 21)
                     {
                         dealerServer[i].sendMessage("You Won");
                         dealerServer[i].sendMessage("ENDGAME");

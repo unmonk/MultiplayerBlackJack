@@ -15,9 +15,18 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
-/**
- *
+/* 
  * @author Scott
+ * @author Jessica
+ * CS 412 Project
+ * 2 December 2015
+
+Notes: Cards total does not update, making player's decision hard to make at times
+        Bid buttons have disappeared since I edited it, but can't find why
+        Cash total does not update, either
+        Chat box doesn't work
+        
+
  */
 public class Client extends javax.swing.JFrame {
 
@@ -48,6 +57,10 @@ public class Client extends javax.swing.JFrame {
             {
                 try
                 {
+                    /*
+                    Change the parameters of the socket instantiation to play over 
+                    a network with another computer. 
+                    */
                     socket = new Socket("localhost", 6000);
                     output = new ObjectOutputStream(socket.getOutputStream());
                     output.flush();
@@ -105,6 +118,20 @@ public class Client extends javax.swing.JFrame {
                 {
                     hideOptionButtons();
                 }
+                if(message.compareToIgnoreCase("You Won")==0 || message.compareToIgnoreCase("Tied the Dealer. Play again!")==0)
+                {
+                    //IF THE GAME IS WON,
+                    //INCREASE cash BY bet AMOUNT
+                    //update display variable: CurrentCashCHANGE
+                    cash = Integer.parseInt(CurrentCashCHANGE.getText()) + bet;
+                    CurrentCashCHANGE.setText(Integer.toString(cash));
+                }
+                else if(message.compareToIgnoreCase("Dealer Won! Play again!")==0 || message.compareToIgnoreCase("BUST")==0)
+                {
+                     cash = Integer.parseInt(CurrentCashCHANGE.getText()) - bet;
+                    CurrentCashCHANGE.setText(Integer.toString(cash));
+                }
+                
             } 
             catch (IOException ex) 
             {
@@ -117,8 +144,11 @@ public class Client extends javax.swing.JFrame {
                 showInfo(ex.toString());
             }
            
-        }
-        while(message.equals("ENDGAME") == false);
+        } while(message.equals("ENDGAME") == false);
+        
+        String newGame = JOptionPane.showInputDialog("Play again? y/n");
+        if (newGame.equals("y")) initPlayer();  
+        
     }
     
     public void closeConnections()
@@ -461,7 +491,7 @@ public class Client extends javax.swing.JFrame {
             }
         });
 
-        BidLabel.setText("Bid");
+        BidLabel.setText("Bid: $");
 
         SubmitBidButton.setFont(new java.awt.Font("Tahoma", 0, 10)); // NOI18N
         SubmitBidButton.setText("Submit Bid");
@@ -510,6 +540,8 @@ public class Client extends javax.swing.JFrame {
             PlayerControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(PlayerControlPanelLayout.createSequentialGroup()
                 .addContainerGap()
+                .addComponent(BidLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(PlayerControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(DecreaseBidButton)
                     .addGroup(PlayerControlPanelLayout.createSequentialGroup()
@@ -518,28 +550,25 @@ public class Client extends javax.swing.JFrame {
                             .addComponent(BidAmountBox))
                         .addGroup(PlayerControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(PlayerControlPanelLayout.createSequentialGroup()
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(PlayerControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(PlayerControlPanelLayout.createSequentialGroup()
-                                        .addComponent(BidLabel)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(SubmitBidButton)
-                                        .addGap(100, 100, 100))
-                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, PlayerControlPanelLayout.createSequentialGroup()
-                                        .addComponent(CurrentCashLabel)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                        .addComponent(CurrentCashCHANGE, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addGap(78, 78, 78)
-                                .addComponent(cardsTotalLbael)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(CardsTotal))
-                            .addGroup(PlayerControlPanelLayout.createSequentialGroup()
                                 .addGap(267, 267, 267)
                                 .addComponent(HitButton, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(18, 18, 18)
                                 .addComponent(StayButton, javax.swing.GroupLayout.PREFERRED_SIZE, 106, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(ConnectButton)))))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 66, Short.MAX_VALUE)
+                                .addComponent(ConnectButton))
+                            .addGroup(PlayerControlPanelLayout.createSequentialGroup()
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(PlayerControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(PlayerControlPanelLayout.createSequentialGroup()
+                                        .addComponent(CurrentCashLabel)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                        .addComponent(CurrentCashCHANGE, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(78, 78, 78)
+                                        .addComponent(cardsTotalLbael)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(CardsTotal))
+                                    .addComponent(SubmitBidButton))
+                                .addGap(0, 0, Short.MAX_VALUE)))))
                 .addContainerGap())
         );
         PlayerControlPanelLayout.setVerticalGroup(
@@ -590,7 +619,8 @@ public class Client extends javax.swing.JFrame {
         ChatPanelLayout.setHorizontalGroup(
             ChatPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(ChatPanelLayout.createSequentialGroup()
-                .addComponent(ChatBoxMessageBox, javax.swing.GroupLayout.PREFERRED_SIZE, 202, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap()
+                .addComponent(ChatBoxMessageBox, javax.swing.GroupLayout.PREFERRED_SIZE, 192, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(ChatBoxSendButton, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
@@ -643,10 +673,15 @@ public class Client extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    /*
+    Scott: Why use Amount(local) and not just replace with bet(global)?
+    */
     private void IncreaseBidButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_IncreaseBidButtonActionPerformed
         int Amount = Integer.parseInt(BidAmountBox.getText());
         Amount++;
+        bet = Amount;
         BidAmountBox.setText(Integer.toString(Amount));
+      
     }//GEN-LAST:event_IncreaseBidButtonActionPerformed
 
     private void DecreaseBidButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DecreaseBidButtonActionPerformed
@@ -655,12 +690,14 @@ public class Client extends javax.swing.JFrame {
         {
             Amount--;
         }
+        bet = Amount;
         BidAmountBox.setText(Integer.toString(Amount));
+       
     }//GEN-LAST:event_DecreaseBidButtonActionPerformed
 
     private void SubmitBidButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SubmitBidButtonActionPerformed
         int Amount = Integer.parseInt(BidAmountBox.getText());
-        
+        bet = Amount;
     }//GEN-LAST:event_SubmitBidButtonActionPerformed
 
     private void HitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_HitButtonActionPerformed

@@ -9,6 +9,9 @@ import blackestjack.Server.Server;
 /**
  *
  * @author Scott
+ * @author Jessica
+ * CS 412 Project
+ * 2 December 2015
  */
 public class BlackestJack 
 {

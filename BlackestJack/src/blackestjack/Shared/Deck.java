@@ -6,9 +6,11 @@
 package blackestjack.Shared;
 import java.util.*;
 import blackestjack.Shared.Card;
-/**
- *
+/* 
  * @author Scott
+ * @author Jessica
+ * CS 412 Project
+ * 2 December 2015
  */
 public final class Deck 
 {
