@@ -7,8 +7,11 @@ package blackestjack.Client;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
@@ -38,37 +41,66 @@ public class Client extends javax.swing.JFrame {
     
     public void initConnection()
     {
-        try
+        SwingWorker<Void, String> initConnectionWorker = new SwingWorker<Void, String>()
         {
-            socket = new Socket("localhost", 6000);
-            output = new ObjectOutputStream(socket.getOutputStream());
-            output.flush();
-            input = new ObjectInputStream(socket.getInputStream());
-            showInfo("Streams Created!");
-            showInfo("Connected to server at: " + socket.getInetAddress().getHostName());
-            initPlayer();
-        }
-        catch(IOException ex)
-        {
-            ex.printStackTrace();
-            showInfo(ex.toString());
-        }
-        finally
-        {
-            closeConnections();
-        }
+            @Override
+            protected Void doInBackground() throws Exception 
+            {
+                try
+                {
+                    socket = new Socket("localhost", 6000);
+                    output = new ObjectOutputStream(socket.getOutputStream());
+                    output.flush();
+                    input = new ObjectInputStream(socket.getInputStream());
+                    publish("Streams Created!");
+                    //showInfo("Streams Created!");
+                    publish("Connected to server at " + socket.getInetAddress().getHostName());
+                    //showInfo("Connected to server at: " + socket.getInetAddress().getHostName());
+                    initPlayer();
+                }
+                catch(IOException ex)
+                {
+                    ex.printStackTrace();
+                    publish(ex.toString());
+                    //showInfo(ex.toString());
+                }
+                finally
+                {
+                    closeConnections();
+                }
+                return null;
+            }
+
+            @Override
+            protected void process(List<String> chunks) 
+            {
+                super.process(chunks); 
+                for(String text : chunks)
+                {
+                    ChatBoxArea.append(text + "\n");
+                }
+            }
+            
+            
+        };
+        initConnectionWorker.execute();
+       
     }
     
     public void initPlayer()
     {
+        
         String name = JOptionPane.showInputDialog("Enter Your Name:");
         sendMessage(name);
+        System.out.println(name);
         do
         {
             try
             {
                 message = (String) input.readObject();
+                System.out.println(message);
                 showInfo(message);
+                showCards(message);
                 if(message.compareToIgnoreCase("BUST")==0 || message.compareToIgnoreCase("WAIT")==0)
                 {
                     hideOptionButtons();
@@ -119,16 +151,133 @@ public class Client extends javax.swing.JFrame {
         }
     }
     
+    public void showCards(String cardz)
+    {
+        String[] test;
+        SwingWorker<String[], String> showCardsWorker = new SwingWorker<String[], String>()
+        {
+            @Override
+            protected String[] doInBackground() throws Exception
+            {
+                String cardInfo = cardz;
+                String delims = "[+]";
+                String[] cards = cardInfo.split(delims);
+                
+                if(!"Dealer cards: ".equals(cards[0]))
+                {
+                    for(int i=1; i<cards.length; i++)
+                    { 
+                       String playerCard = "PlayerCard"+i;
+                       String cardToGet = cards[i];
+                       publish("Images/" + cardToGet + ".png");
+                    
+                    }
+
+                }
+                
+                return cards;
+                
+            }  
+            
+            @Override
+            protected void process(List<String> chunks) 
+            {
+                
+                super.process(chunks); //To change body of generated methods, choose Tools | Templates.
+                String[] cards = null;
+                try {
+                    cards = super.get();
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (ExecutionException ex) {
+                    Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                for(String text : chunks)
+                {
+                    ImageIcon cardImage = new ImageIcon(text);
+                    for(int i=1; i<cards.length; i++)
+                       switch(i)
+                       {
+                           case 1:
+                               playerCard1.setIcon(cardImage);
+                               break;
+                           case 2:
+                               playerCard2.setIcon(cardImage);
+                               break;
+                           case 3:
+                               playerCard3.setIcon(cardImage);
+                               break;
+                            case 4:
+                               playerCard4.setIcon(cardImage);
+                               break;
+                            case 5:
+                               playerCard5.setIcon(cardImage);
+                               break;
+                            case 6:
+                               playerCard6.setIcon(cardImage);
+                               break;
+                            default:
+                                break;
+
+
+                       }
+                }
+            }
+            
+            
+
+            @Override
+            protected void done() 
+            {
+                super.done();
+                try {
+                    super.get();
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (ExecutionException ex) {
+                    Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        };
+        showCardsWorker.execute();
+        
+    }
+    
     public void showInfo(final String info)
     {
-        SwingUtilities.invokeLater(new Runnable()
+        SwingWorker<Void, String> showInfoWorker = new SwingWorker<Void, String>()
+        {
+            @Override
+            protected Void doInBackground() throws Exception 
+            {
+               publish(info);
+               return null;
+            }
+
+            @Override
+            protected void done() 
+            {
+                super.done(); 
+            }
+
+            @Override
+            protected void process(List<String> chunks) 
+            {
+                super.process(chunks);
+                for(String text : chunks)
                 {
-                    @Override
-                    public void run() 
-                    {
-                        ChatBoxArea.append(info + "\n");
-                    }            
-                });
+                    ChatBoxArea.append(text + "\n");
+                }
+            }  
+        };
+        showInfoWorker.execute();
+//       SwingUtilities.invokeLater(new Runnable()
+//       {
+//           public void run()
+//           {
+//               ChatBoxArea.append(info + "\n");
+//           }
+//       });
     }
     
     public void showBetButtons()

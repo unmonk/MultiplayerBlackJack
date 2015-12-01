@@ -36,7 +36,7 @@ public final class Card
             case 13:
                 return "KING";
             default:
-                return Integer.toString(value);
+                return (Integer.toString(value));
         }
     }
     

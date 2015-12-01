@@ -68,7 +68,7 @@ public class Player
     
     public String playerCardsInfo(boolean showCard)
     {
-        String info = username + " cards:";
+        String info = username + " cards: + ";
         for(int i=0; i<cardCount; i++)
         {
             if(i==0 && showCard == false)
@@ -77,7 +77,7 @@ public class Player
             }
             else
             {
-                info += playerCards.get(i).toString();
+                info += playerCards.get(i).toString() + " + ";
             }
         }
         info += "\n";

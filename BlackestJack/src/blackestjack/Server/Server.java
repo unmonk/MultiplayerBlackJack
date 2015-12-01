@@ -8,8 +8,11 @@ import blackestjack.Shared.*;
 import java.net.*;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
@@ -21,9 +24,6 @@ public class Server extends javax.swing.JFrame
 {
 
     private ServerSocket server;
-    private Socket socket;
-    private ObjectOutputStream output;
-    private ObjectInputStream input;
     private ExecutorService exec = Executors.newFixedThreadPool(10);
     private int maxPlayers;
     private int turnsLeft;
@@ -55,13 +55,14 @@ public class Server extends javax.swing.JFrame
                 try
                 {
                     initConnections();
-                    while(true)
+                    while((connectionCount -1) < maxPlayers)
                     {
                         try
                         {
                             dealerServer[connectionCount] = new DealerServer(connectionCount);
                             dealerServer[connectionCount].waitForPlayers();
                             exec.execute(dealerServer[connectionCount]);
+                            System.out.println("Reached execute exec");
                         }
                         catch(Exception ex)
                         {
@@ -71,6 +72,7 @@ public class Server extends javax.swing.JFrame
                         finally
                         {
                             ++connectionCount;
+                            playerCountLabel.setText(Integer.toString(connectionCount - 1));
                         }
                     }
                 }
@@ -81,8 +83,29 @@ public class Server extends javax.swing.JFrame
                 }
                 return null;
             }
+
+            @Override
+            protected void done() 
+            {
+                super.done();
+                try 
+                {
+                    super.get();
+                } 
+                catch (InterruptedException ex) 
+                {
+                    ex.printStackTrace();
+                } 
+                catch (ExecutionException ex) 
+                {
+                    ex.printStackTrace();
+                }
+            }
+            
+            
         };
         initServerWorker.execute();
+   
     }
     //end initServer
     
@@ -120,17 +143,22 @@ public class Server extends javax.swing.JFrame
         {
             try
             {
+                System.out.println("Reached DealerServer run()");
                 output = new ObjectOutputStream(socket.getOutputStream());
                 output.flush();
                 input = new ObjectInputStream(socket.getInputStream());
                 
                 String username = (String)input.readObject();
+                System.out.println("DEALER:" + username);
                 players.add(new Player(username));
-                showInfo(players.get(connectionID - 1) + " joined the game");
+                System.out.println(players);
+                //DealerTextArea.append(players.get(connectionID - 1) + " Joined the game");
+                //showInfo(players.get(connectionID - 1) + " joined the game");
                 
                 if(players.size() == maxPlayers)
                 {
-                    showInfo("Starting Game");
+                    System.out.println("starting game");
+                    //showInfo("Starting Game");
                     deal();
                 }
                 getMessages();
@@ -205,11 +233,13 @@ public class Server extends javax.swing.JFrame
         //end Hit
         private void deal()
         {
+            System.out.println("Dealing");
             for(int i=0; i<2; i++)
             {
                 for(int j=0; j<players.size(); j++)
                 {
                     players.get(j).getCard(deck.dealOne());
+                    System.out.println(players.get(j).playerCardsInfo(true));
                 }
                 dealer.getCard(deck.dealOne());
             }
@@ -274,15 +304,18 @@ public class Server extends javax.swing.JFrame
                         if(players.get(i-1).getCardTotal() <= 21)
                         {
                             dealerServer[i].sendMessage("Dealer Busts, " + players.get(i-1).toString() + " wins!");
+                            dealerServer[i].sendMessage("ENDGAME");
                         }
                     }
                     else if(playerTotal > dealersTotal && playerTotal < 21)
                     {
                         dealerServer[i].sendMessage("You Won");
+                        dealerServer[i].sendMessage("ENDGAME");
                     }
                     else if(playerTotal == dealersTotal)
                     {
                         dealerServer[i].sendMessage("Tied the Dealer. Play again!");
+                        dealerServer[i].sendMessage("ENDGAME");
                     }
                     else
                     {
@@ -336,14 +369,33 @@ public class Server extends javax.swing.JFrame
     
     private void showInfo(final String info)
     {
-        SwingUtilities.invokeLater(new Runnable()
+       
+        SwingWorker<Void, String> showInfoWorker = new SwingWorker<Void, String>()
+        {
+            @Override
+            protected Void doInBackground() throws Exception 
+            {
+               publish(info);
+               return null;
+            }
+
+            @Override
+            protected void done() 
+            {
+                super.done(); 
+            }
+
+            @Override
+            protected void process(List<String> chunks) 
+            {
+                super.process(chunks);
+                for(String text : chunks)
                 {
-                    @Override
-                    public void run() 
-                    {
-                        DealerTextArea.append(info + "\n");
-                    }            
-                });
+                    DealerTextArea.append(text + "\n");
+                }
+            }  
+        };
+        showInfoWorker.execute();
     }
     //end showInfo
     
