@@ -96,6 +96,7 @@ public class DealerForm extends javax.swing.JFrame {
                         try
                         {
                             socket = servsocket.accept();
+                            publish("Player Connected \n");
                             System.out.println("DEBUG: Player Joined");
 
                         }
